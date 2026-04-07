@@ -1,1 +1,1530 @@
-hola
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MegaClean · Cobranzas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --surface2: #f0efe9;
+    --border: #e2e0d8;
+    --text: #1a1916;
+    --text2: #6b6860;
+    --text3: #9e9c96;
+    --accent: #1a1916;
+    --green: #2d6a4f;
+    --green-bg: #d8f3dc;
+    --yellow: #b5620a;
+    --yellow-bg: #fff0d0;
+    --red: #9b2335;
+    --red-bg: #fde8eb;
+    --blue: #1a4f8a;
+    --blue-bg: #ddeeff;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* LOGIN */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 360px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .login-logo-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .login-logo-text {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .login-logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 28px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.15s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .login-error {
+    background: var(--red-bg);
+    color: var(--red);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* APP SHELL */
+  #app { display: none; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-logo {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .topbar-sep {
+    color: var(--border);
+    font-size: 18px;
+  }
+
+  .topbar-section {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .topbar-user {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .btn-logout {
+    font-size: 12px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .btn-logout:hover { background: var(--surface2); color: var(--text); }
+
+  /* MAIN */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px;
+  }
+
+  /* IMPORT PANEL */
+  .import-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .import-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--surface2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .import-info { flex: 1; min-width: 200px; }
+
+  .import-info h3 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  .import-info p {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .import-status {
+    font-size: 12px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn-import {
+    padding: 9px 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .btn-import:hover { opacity: 0.85; }
+
+  #file-input { display: none; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 2px;
+  }
+
+  .stat-red .stat-value { color: var(--red); }
+  .stat-yellow .stat-value { color: var(--yellow); }
+  .stat-green .stat-value { color: var(--green); }
+
+  /* FILTERS */
+  .filters-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 220px;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { background: var(--surface2); }
+  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .filter-btn.f-red.active { background: var(--red); border-color: var(--red); color: white; }
+  .filter-btn.f-yellow.active { background: var(--yellow); border-color: var(--yellow); color: white; }
+  .filter-btn.f-green.active { background: var(--green); border-color: var(--green); color: white; }
+
+  .sort-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .table-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+  }
+
+  .table-count {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text3);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    font-weight: 500;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  .client-name {
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .client-code {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    margin-top: 1px;
+  }
+
+  .client-phone {
+    font-size: 12px;
+    color: var(--text2);
+  }
+
+  .amount {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .amount-red { color: var(--red); }
+  .amount-yellow { color: var(--yellow); }
+  .amount-green { color: var(--green); }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-red .badge-dot { background: var(--red); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-yellow .badge-dot { background: var(--yellow); }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-green .badge-dot { background: var(--green); }
+
+  /* ACTIONS */
+  .actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .btn-wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .btn-wa:hover { opacity: 0.85; }
+
+  .btn-detail {
+    padding: 6px 10px;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-detail:hover { background: var(--border); color: var(--text); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text3);
+  }
+
+  .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .empty-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .empty-sub {
+    font-size: 13px;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    display: none;
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .modal-subtitle {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text3);
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .modal-section {
+    margin-bottom: 20px;
+  }
+
+  .modal-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text3);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--surface2);
+    font-size: 13px;
+  }
+
+  .detail-row:last-child { border-bottom: none; }
+
+  .detail-label { color: var(--text2); }
+  .detail-value { font-weight: 500; font-family: 'DM Mono', monospace; }
+
+  .facturas-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .factura-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .factura-num { font-family: 'DM Mono', monospace; color: var(--text2); }
+  .factura-dates { color: var(--text2); text-align: center; }
+  .factura-saldo { font-weight: 500; font-family: 'DM Mono', monospace; }
+
+  .wa-msg-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+  }
+
+  .btn-wa-full {
+    width: 100%;
+    padding: 11px;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .btn-wa-full:hover { opacity: 0.85; }
+
+  .no-phone-note {
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+    padding: 10px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-md);
+    z-index: 300;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ADMIN TAG */
+  .admin-tag {
+    font-size: 11px;
+    color: var(--blue);
+    background: var(--blue-bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 3px;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .main { padding: 16px; }
+    thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark">M</div>
+      <div>
+        <div class="login-logo-text">MegaClean</div>
+        <div class="login-logo-sub">Administración</div>
+      </div>
+    </div>
+    <div class="login-title">Gestión de cobranzas</div>
+    <div class="login-sub">Ingresá con tu usuario para continuar</div>
+    <div class="form-group">
+      <label class="form-label">Usuario</label>
+      <input class="form-input" id="login-user" type="text" placeholder="usuario" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">M</div>
+      <span class="topbar-title">MegaClean</span>
+      <span class="topbar-sep">/</span>
+      <span class="topbar-section">Cobranzas</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbar-user"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- IMPORT -->
+    <div class="import-panel">
+      <div class="import-icon">📊</div>
+      <div class="import-info">
+        <h3>Importar reporte Skylab</h3>
+        <p>Cargá el archivo XLS mensual de movimientos pendientes</p>
+      </div>
+      <div class="import-status" id="import-status">Sin datos cargados</div>
+      <input type="file" id="file-input" accept=".xls,.xlsx" onchange="handleFile(this)">
+      <button class="btn-import" onclick="document.getElementById('file-input').click()">Cargar XLS</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total clientes</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub">con saldo pendiente</div>
+      </div>
+      <div class="stat-card stat-red">
+        <div class="stat-label">🔴 Vencidos</div>
+        <div class="stat-value" id="stat-red">—</div>
+        <div class="stat-sub" id="stat-red-monto">—</div>
+      </div>
+      <div class="stat-card stat-yellow">
+        <div class="stat-label">🟡 Por vencer</div>
+        <div class="stat-value" id="stat-yellow">—</div>
+        <div class="stat-sub" id="stat-yellow-monto">—</div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="stat-label">🟢 Al día</div>
+        <div class="stat-value" id="stat-green">—</div>
+        <div class="stat-sub" id="stat-green-monto">—</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters-row">
+      <input type="text" class="search-input" id="search" placeholder="Buscar cliente o administrador..." oninput="renderTable()">
+      <button class="filter-btn active" id="f-all" onclick="setFilter('all')">Todos</button>
+      <button class="filter-btn f-red" id="f-red" onclick="setFilter('red')">🔴 Vencidos</button>
+      <button class="filter-btn f-yellow" id="f-yellow" onclick="setFilter('yellow')">🟡 Por vencer</button>
+      <button class="filter-btn f-green" id="f-green" onclick="setFilter('green')">🟢 Al día</button>
+      <select class="sort-select" id="sort-select" onchange="renderTable()">
+        <option value="monto-desc">Mayor deuda</option>
+        <option value="monto-asc">Menor deuda</option>
+        <option value="nombre-asc">Nombre A-Z</option>
+        <option value="dias-desc">Más días vencidos</option>
+      </select>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">Clientes con saldo pendiente</span>
+        <span class="table-count" id="table-count">—</span>
+      </div>
+      <div id="table-container">
+        <div class="empty-state">
+          <div class="empty-icon">📂</div>
+          <div class="empty-title">Sin datos</div>
+          <div class="empty-sub">Cargá el reporte XLS de Skylab para comenzar</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// USUARIOS
+// ============================================================
+const USERS = {
+  'ADMIN': { pass: 'mega2024', nombre: 'Administración', rol: 'admin' },
+  'COBROS': { pass: 'cobros24', nombre: 'Cobranzas', rol: 'cobros' }
+};
+
+// ============================================================
+// ADMINISTRADORES DE CONSORCIO
+// ============================================================
+const ADMINS_MAP = {
+  'CONSORCIO ALLENDE OESTE': 'ADM BERTINATTI',
+  'CONSORCIO MARTIN GARCIA 944': 'ADM BERTINATTI',
+  'ED. BERTINATTI  LIBERTAD': 'ADM BERTINATTI',
+  'ED. BERTTINATTI  ANTOLIN': 'ADM BERTINATTI',
+  'ED. EL GRINGO': 'ADM BERTINATTI',
+  'EDIFICIO LAS HERAS 843': 'ADM BERTINATTI',
+  'CONS. COPR. EDIFICIO ORION IV': 'ADM CAFFARATTI',
+  'CONS. COPR. EDIFICIO TOWER': 'ADM CAFFARATTI',
+  'CONS. COPROPIETARIOS EDIFICIO LAUSANNE': 'ADM CAFFARATTI',
+  'CONS. EDIFICIO MIRADORES DEL BUEN PASTOR': 'ADM CAFFARATTI',
+  'CONS. PROP EDIFICIO CITY OFFICE CENTER': 'ADM CAFFARATTI',
+  'EDIFICIO ALVEAR OFFICE': 'ADM CAFFARATTI',
+  'EDIFICIO RAICES II': 'ADM CAFFARATTI',
+  'EDIFICIO TORRE MARINA II': 'ADM CAFFARATTI',
+  'CONS. COPR. EDIFICIO RAICES I': 'ADM CAFFARATTI',
+  'CONS. COPR. EDIFICIO RAICES V': 'ADM CAFFARATTI',
+  'CONS. COPR. EDIFICIO YRIGOYEN OFFICE': 'ADM CAFFARATTI',
+  'CONS. DE PROP EDIF. RAICES IV': 'ADM CAFFARATTI',
+  'CONSORCIO COPROPIETARIO EDIFICIO COIHUE': 'ADM CAFFARATTI',
+  'TRASANDINA': 'ADM GONZALEZ',
+  'CONS. DE PROP ALTOS DE SANABRIA': 'ADM GONZALEZ',
+  'CONSORCIO DE PROP. EDIFICIO TORRE BRASIL': 'ADM GONZALEZ',
+  'EDIFICIO AGUSTINA': 'ADM GONZALEZ',
+  'VALTODANO': 'ADM GONZALEZ',
+  'EDIFICIO BUENOS AIRES 1246': 'ADM GONZALEZ',
+  'POETA LUGONES 38': 'ADM GONZALEZ',
+  'CENTAURO V': 'ADM HERNAN GATTI',
+  'ED. GENESIS': 'ADM HERNAN GATTI',
+  'ED. CENTAURO VI': 'ADM HERNAN GATTI',
+  'CONS. DE PROP. ED. INTERLAKEN II': 'ADM HERNAN GATTI',
+  'CONSORCIO DE PROP DEL ED CORAL PLAZA': 'ADM HERNAN GATTI',
+  'INTERLAKEN III - EVENTUAL': 'ADM HERNAN GATTI',
+  'EDIFICIO ESQUIU': 'ADM HERNAN GATTI',
+  'EDIFICIO SIVANA': 'ADM HERNAN GATTI',
+  'TORRE MARINA': 'ADM OLOCCO',
+  'CONS. DE COPROP. DEL EDIFICIO RAVENNA': 'ADM OLOCCO',
+  'CONSORCIO CHACABUCO 184': 'ADM OLOCCO',
+  'CONSORCIO DE PROPIETARIOS DEAN FUNES 250': 'ADM OLOCCO',
+  'EDIFICIO LOS NOGALES SRL': 'ADM OLOCCO',
+  'EDIFICIO AMANCAY I': 'ADM OLOCCO',
+  'CONSORCIO ED. ATTME': 'ADM OLOCCO',
+  'EDIFICIO FRAGUEIRO 343': 'ADM OLOCCO',
+  'SALVATICO I': 'ADM OLOCCO',
+  'EDIFICIO PARQUE': 'ADM OLOCCO',
+  'CONS. PROP ARTEGNA IV -EVENTUAL-': 'ADM RUFEIL',
+  'LUGONES 28': 'ADM RUFEIL',
+  'CONS PROPIETARIOS EDIF POETA LUGONES 34': 'ADM RUFEIL',
+  'CONSORCIO DE PROPIETARIOS DEL ED TAPIES': 'ADM RUFEIL',
+  'VERACRUZ - EVENTUAL-': 'ADM RUFEIL',
+  'EDIFICIO ALMAR- EVENTUAL-': 'ADM RUFEIL',
+  'PONTEVEDRA III EVENTUAL': 'ADM RUFEIL',
+  'EDIFICIO JR EVENTUAL': 'ADM RUFEIL',
+  'EDIFICIO DUARTE QUIROS 525': 'ADM RUFEIL',
+  'CONSORCIO DE PROP. EDIFICIO IRIS': 'ADM VIVIANA FERRERO',
+  'CONSORCIO GOPAR I': 'ADM VIVIANA FERRERO',
+  'CONSORCIO IRIGOYEN 131': 'ADM VIVIANA FERRERO',
+  'BALCARCE': 'ADM VIVIANA FERRERO',
+  'DESA II': 'ADM ZEBALLOS',
+  'DESA VII': 'ADM ZEBALLOS',
+  'ED. DESA III': 'ADM ZEBALLOS',
+  'ED. DESA IV': 'ADM ZEBALLOS',
+  'ED. 25 DE MAYO 1143': 'ADM ZEBALLOS',
+  'CONS. DE PROP. EDIFICIO AMBATO': 'ADM ZEBALLOS',
+  'EDIFICIO MADRYN': 'ADM COLOMER',
+  'EDIFICIO PATRIA': 'ADM COLOMER',
+  'EDIFICIO JACARANDA VI': 'ADM COLOMER',
+  'GRAU Y CERRITO': 'ADM DESTEFANIS',
+  'CANDONGA': 'ADM DESTEFANIS',
+  'CONSORCIO DE PROPIETARIOS INARCO VIII': 'ADM DESTEFANIS',
+  'CONSORCIO DE PROPIETARIOS INARCO XI': 'ADM DESTEFANIS',
+  '9 DE JULIO 649': 'ADM DESTEFANIS',
+  'CONSORCIO DE PROPIETARIOS MUÑECA HERMIDA': 'ADM DESTEFANIS',
+  'EDIFICIO OLIVA': 'ADM DESTEFANIS',
+  'ARTEMIS II': 'ADM ESTEBAN CASTAÑO',
+  'CONSORCIO EDIFICIO CASEROS 2940 ARTEMIS IV': 'ADM ESTEBAN CASTAÑO',
+  'CONSORCIO EDIFICIO ITUZAINGO 769': 'ADM ESTEBAN CASTAÑO',
+  'CONSORCIO FIDEICOMISO MAESTRO VIDAL': 'ADM ESTEBAN CASTAÑO',
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let allClients = [];
+let currentFilter = 'all';
+
+// ============================================================
+// LOGIN
+// ============================================================
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toUpperCase();
+  const p = document.getElementById('login-pass').value;
+  if (USERS[u] && USERS[u].pass === p) {
+    currentUser = { ...USERS[u], username: u };
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('topbar-user').textContent = currentUser.nombre;
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
+
+// ============================================================
+// XLS IMPORT
+// ============================================================
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'dd/mm/yyyy' });
+      processRows(rows, file.name);
+    } catch(err) {
+      showToast('Error al leer el archivo. Verificá que sea el reporte de Skylab.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = '';
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const s = String(str).trim();
+  // dd/mm/yyyy
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  // yyyy-mm-dd
+  const m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function parseAmount(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  const s = String(val).replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+  return parseFloat(s) || 0;
+}
+
+function processRows(rows, filename) {
+  // Detectar fila de encabezados
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(30, rows.length); i++) {
+    const r = rows[i];
+    if (!r) continue;
+    const joined = r.map(c => String(c||'').toLowerCase()).join('|');
+    if (joined.includes('fecha') && (joined.includes('importe') || joined.includes('saldo') || joined.includes('detalle'))) {
+      headerRow = i;
+      break;
+    }
+  }
+
+  // Parsear clientes — el reporte de Crystal Reports tiene una estructura
+  // donde aparece el nombre del cliente seguido de sus movimientos
+  const clientsMap = {};
+  let currentClientName = '';
+  let currentClientCode = '';
+  let currentClientPhone = '';
+  let currentClientDir = '';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row || row.every(c => !c)) continue;
+    const cells = row.map(c => String(c||'').trim());
+    const joined = cells.join('|').toLowerCase();
+
+    // Detectar línea de cliente (código numérico de 7 dígitos en segunda posición)
+    // Pattern: nombre cliente | código (0000XXX) | dirección | teléfono
+    const codeMatch = cells.find(c => /^0{3,4}\d{3,4}$/.test(c.replace(/[^0-9]/g,'')));
+    if (codeMatch && cells[0] && cells[0].length > 3 && !joined.includes('factura') && !joined.includes('fecha') && !joined.includes('importe')) {
+      const possibleName = cells[0];
+      if (possibleName && possibleName.length > 2 && !/^\d+$/.test(possibleName)) {
+        currentClientName = possibleName.toUpperCase();
+        currentClientCode = codeMatch;
+        currentClientDir = cells[2] || '';
+        currentClientPhone = cells[3] || '';
+        if (!clientsMap[currentClientName]) {
+          clientsMap[currentClientName] = {
+            nombre: currentClientName,
+            codigo: currentClientCode,
+            telefono: limpiarTelefono(currentClientPhone),
+            telefono_raw: currentClientPhone,
+            direccion: currentClientDir,
+            movimientos: [],
+            saldoTotal: 0,
+            admin: buscarAdmin(currentClientName)
+          };
+        }
+        continue;
+      }
+    }
+
+    // Detectar línea de movimiento (tiene fecha + tipo + número + importe)
+    if (currentClientName && clientsMap[currentClientName]) {
+      // Buscar fecha válida en las primeras celdas
+      let fechaEmision = null, fechaVto = null, importe = 0, saldo = 0, tipo = '', numero = '';
+      
+      for (let ci = 0; ci < cells.length; ci++) {
+        const c = cells[ci];
+        if (!fechaEmision && /\d{1,2}\/\d{1,2}\/\d{4}/.test(c)) {
+          fechaEmision = parseDate(c);
+        } else if (fechaEmision && !fechaVto && /\d{1,2}\/\d{1,2}\/\d{4}/.test(c)) {
+          fechaVto = parseDate(c);
+        }
+      }
+
+      // Detectar tipo de comprobante
+      const tiposValidos = ['factura','n/debito','n/credito','recibo','adelanto','n/débito','n/crédito'];
+      const tipoFound = tiposValidos.find(t => joined.includes(t));
+      if (tipoFound) tipo = tipoFound.toUpperCase().replace('N/DÉBITO','N/DEBITO').replace('N/CRÉDITO','N/CREDITO');
+
+      // Buscar números de comprobante (8 dígitos)
+      const numMatch = cells.find(c => /^\d{7,8}$/.test(c.replace(/[^0-9]/g,'')));
+      if (numMatch) numero = numMatch;
+
+      // Buscar importes (números con decimales)
+      const importes = cells.filter(c => /^[\d.,]+$/.test(c.replace(/\s/g,'')) && c.includes(',') || /^\d{3,}[.,]\d{2}$/.test(c));
+      if (importes.length >= 2) {
+        importe = parseAmount(importes[importes.length - 2]);
+        saldo = parseAmount(importes[importes.length - 1]);
+      } else if (importes.length === 1) {
+        saldo = parseAmount(importes[0]);
+      }
+
+      if (fechaEmision && saldo > 0) {
+        clientsMap[currentClientName].movimientos.push({
+          tipo: tipo || 'FACTURA',
+          numero,
+          fechaEmision,
+          fechaVto,
+          importe,
+          saldo
+        });
+        clientsMap[currentClientName].saldoTotal += saldo;
+      }
+    }
+  }
+
+  // Si el parseo estructurado no dio buenos resultados,
+  // intentar parseo alternativo buscando patrones en todo el texto
+  let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 0);
+  
+  if (clients.length < 5) {
+    clients = parseAlternativo(rows);
+  }
+
+  // Calcular estado semáforo
+  clients.forEach(c => {
+    c.estado = calcularEstado(c);
+    c.diasVencido = calcularDiasVencido(c);
+  });
+
+  allClients = clients;
+  updateStats();
+  renderTable();
+
+  const fecha = new Date().toLocaleDateString('es-AR');
+  document.getElementById('import-status').textContent = `${clients.length} clientes · ${fecha}`;
+  showToast(`✓ ${clients.length} clientes importados correctamente`);
+}
+
+function parseAlternativo(rows) {
+  // Parseo alternativo: busca nombres seguidos de códigos y luego importes
+  const clients = {};
+  let lastName = '';
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row) continue;
+    const cells = row.map(c => String(c||'').trim()).filter(c => c);
+    if (cells.length < 2) continue;
+
+    // Nombre + código en misma fila o consecutivas
+    const first = cells[0];
+    const hasCode = cells.some(c => /^0{3}\d{4,5}$/.test(c));
+    
+    if (first.length > 4 && !/^\d/.test(first) && !first.toLowerCase().includes('fecha') && hasCode) {
+      lastName = first.toUpperCase();
+      if (!clients[lastName]) {
+        const code = cells.find(c => /^0{3}\d{4,5}$/.test(c)) || '';
+        const phone = cells.find(c => /[\d\s\-\+]{7,}/.test(c) && c !== code) || '';
+        clients[lastName] = {
+          nombre: lastName,
+          codigo: code,
+          telefono: limpiarTelefono(phone),
+          telefono_raw: phone,
+          direccion: cells[2] || '',
+          movimientos: [],
+          saldoTotal: 0,
+          admin: buscarAdmin(lastName)
+        };
+      }
+    }
+
+    // Línea de movimiento con importe
+    if (lastName && clients[lastName]) {
+      const montos = cells.filter(c => {
+        const n = parseAmount(c);
+        return n > 100 && c.length > 3;
+      });
+      const fecha = cells.find(c => /\d{1,2}\/\d{1,2}\/\d{4}/.test(c));
+      
+      if (fecha && montos.length > 0) {
+        const saldo = parseAmount(montos[montos.length - 1]);
+        if (saldo > 0) {
+          const fechaVto = cells.filter(c => /\d{1,2}\/\d{1,2}\/\d{4}/.test(c));
+          clients[lastName].movimientos.push({
+            tipo: 'FACTURA',
+            numero: cells.find(c => /^\d{7,8}$/.test(c)) || '',
+            fechaEmision: parseDate(fecha),
+            fechaVto: fechaVto[1] ? parseDate(fechaVto[1]) : parseDate(fecha),
+            importe: parseAmount(montos[0]),
+            saldo
+          });
+          clients[lastName].saldoTotal += saldo;
+        }
+      }
+    }
+  }
+
+  return Object.values(clients).filter(c => c.saldoTotal > 0);
+}
+
+function buscarAdmin(nombre) {
+  const n = nombre.toUpperCase().trim();
+  // Búsqueda exacta primero
+  if (ADMINS_MAP[n]) return ADMINS_MAP[n];
+  // Búsqueda parcial
+  for (const key of Object.keys(ADMINS_MAP)) {
+    const k = key.toUpperCase();
+    if (n.includes(k) || k.includes(n) || similaridad(n, k) > 0.75) {
+      return ADMINS_MAP[key];
+    }
+  }
+  return null;
+}
+
+function similaridad(a, b) {
+  const long = Math.max(a.length, b.length);
+  if (long === 0) return 1;
+  const common = [...a].filter(c => b.includes(c)).length;
+  return common / long;
+}
+
+function limpiarTelefono(tel) {
+  if (!tel) return '';
+  // Extraer solo dígitos y algunos caracteres válidos
+  const nums = tel.replace(/[^\d\s\+\-\(\)]/g, '').trim();
+  // Intentar normalizar para Argentina
+  const digits = nums.replace(/\D/g, '');
+  if (digits.length >= 10) {
+    // Si empieza con 54, ya tiene código de país
+    if (digits.startsWith('54')) return '+' + digits;
+    // Si empieza con 0351 o similar (código área)
+    if (digits.startsWith('0')) return '+549' + digits.slice(1);
+    // Si es solo número local de 10 dígitos
+    if (digits.length === 10) return '+549' + digits;
+  }
+  return digits || tel;
+}
+
+function calcularEstado(client) {
+  if (!client.movimientos.length) return 'green';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  
+  let tieneVencido = false;
+  let tienePorVencer = false;
+  
+  client.movimientos.forEach(m => {
+    if (!m.fechaVto) return;
+    const vto = new Date(m.fechaVto);
+    vto.setHours(0,0,0,0);
+    const diff = Math.floor((today - vto) / (1000*60*60*24));
+    if (diff > 0) tieneVencido = true;
+    else if (diff > -15) tienePorVencer = true;
+  });
+  
+  if (tieneVencido) return 'red';
+  if (tienePorVencer) return 'yellow';
+  return 'green';
+}
+
+function calcularDiasVencido(client) {
+  if (!client.movimientos.length) return 0;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let maxDias = 0;
+  client.movimientos.forEach(m => {
+    if (!m.fechaVto) return;
+    const vto = new Date(m.fechaVto);
+    vto.setHours(0,0,0,0);
+    const diff = Math.floor((today - vto) / (1000*60*60*24));
+    if (diff > maxDias) maxDias = diff;
+  });
+  return maxDias;
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats() {
+  const total = allClients.length;
+  const reds = allClients.filter(c => c.estado === 'red');
+  const yellows = allClients.filter(c => c.estado === 'yellow');
+  const greens = allClients.filter(c => c.estado === 'green');
+
+  const sumMonto = arr => arr.reduce((s, c) => s + c.saldoTotal, 0);
+  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-red').textContent = reds.length;
+  document.getElementById('stat-red-monto').textContent = fmt(sumMonto(reds));
+  document.getElementById('stat-yellow').textContent = yellows.length;
+  document.getElementById('stat-yellow-monto').textContent = fmt(sumMonto(yellows));
+  document.getElementById('stat-green').textContent = greens.length;
+  document.getElementById('stat-green-monto').textContent = fmt(sumMonto(greens));
+}
+
+// ============================================================
+// TABLE
+// ============================================================
+function setFilter(f) {
+  currentFilter = f;
+  ['all','red','yellow','green'].forEach(x => {
+    const btn = document.getElementById('f-' + x);
+    btn.classList.remove('active');
+  });
+  document.getElementById('f-' + f).classList.add('active');
+  renderTable();
+}
+
+function renderTable() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+
+  let data = allClients.filter(c => {
+    if (currentFilter !== 'all' && c.estado !== currentFilter) return false;
+    if (search) {
+      const hay = (c.nombre + ' ' + (c.admin||'') + ' ' + c.codigo).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  data.sort((a, b) => {
+    if (sort === 'monto-desc') return b.saldoTotal - a.saldoTotal;
+    if (sort === 'monto-asc') return a.saldoTotal - b.saldoTotal;
+    if (sort === 'nombre-asc') return a.nombre.localeCompare(b.nombre);
+    if (sort === 'dias-desc') return b.diasVencido - a.diasVencido;
+    return 0;
+  });
+
+  document.getElementById('table-count').textContent = data.length + ' clientes';
+
+  if (!data.length) {
+    document.getElementById('table-container').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">${allClients.length ? '🔍' : '📂'}</div>
+        <div class="empty-title">${allClients.length ? 'Sin resultados' : 'Sin datos'}</div>
+        <div class="empty-sub">${allClients.length ? 'Probá con otro filtro o búsqueda' : 'Cargá el reporte XLS de Skylab para comenzar'}</div>
+      </div>`;
+    return;
+  }
+
+  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+
+  const colores = { red: 'amount-red', yellow: 'amount-yellow', green: 'amount-green' };
+
+  const rows = data.map((c, i) => {
+    const badge = c.estado === 'red'
+      ? `<span class="badge badge-red"><span class="badge-dot"></span>Vencido${c.diasVencido > 0 ? ' · '+c.diasVencido+'d' : ''}</span>`
+      : c.estado === 'yellow'
+      ? `<span class="badge badge-yellow"><span class="badge-dot"></span>Por vencer</span>`
+      : `<span class="badge badge-green"><span class="badge-dot"></span>Al día</span>`;
+
+    const adminTag = c.admin ? `<span class="admin-tag">${c.admin}</span>` : '';
+    const vto = c.movimientos.length ? fmtDate(c.movimientos[0].fechaVto) : '—';
+    const telDisplay = c.telefono_raw ? `<span class="client-phone">${c.telefono_raw}</span>` : '<span class="client-phone" style="color:var(--text3)">Sin teléfono</span>';
+
+    const hasPhone = !!c.telefono;
+    const waBtn = hasPhone
+      ? `<button class="btn-wa" onclick="abrirModal(${i}, event)">💬 WhatsApp</button>`
+      : `<button class="btn-detail" onclick="abrirModal(${i}, event)">Ver detalle</button>`;
+
+    return `<tr>
+      <td>
+        <div class="client-name">${c.nombre}</div>
+        <div class="client-code">${c.codigo}</div>
+        ${adminTag}
+        ${telDisplay}
+      </td>
+      <td>${badge}</td>
+      <td style="text-align:center;color:var(--text2);font-size:12px">${vto}</td>
+      <td class="amount ${colores[c.estado]}">${fmt(c.saldoTotal)}</td>
+      <td>
+        <div class="actions">
+          ${waBtn}
+          ${hasPhone ? `<button class="btn-detail" onclick="abrirModal(${i}, event)">Detalle</button>` : ''}
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  // Guardar índice filtrado para el modal
+  window._filteredClients = data;
+
+  document.getElementById('table-container').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Estado</th>
+          <th>Próx. vto.</th>
+          <th style="text-align:right">Saldo</th>
+          <th style="text-align:right">Acción</th>
+        </tr>
+      </thead>
+      <tbody>${rows.join('')}</tbody>
+    </table>`;
+}
+
+// ============================================================
+// MODAL DETALLE + WHATSAPP
+// ============================================================
+function abrirModal(idx, event) {
+  if (event) event.stopPropagation();
+  const c = window._filteredClients[idx];
+  if (!c) return;
+
+  document.getElementById('modal-title').textContent = c.nombre;
+  document.getElementById('modal-subtitle').textContent = 'Código ' + c.codigo + (c.admin ? ' · ' + c.admin : '');
+
+  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+
+  const facturas = c.movimientos.map(m => `
+    <div class="factura-item">
+      <span class="factura-num">${m.tipo} ${m.numero}</span>
+      <span class="factura-dates">Emisión: ${fmtDate(m.fechaEmision)}<br>Vto: ${fmtDate(m.fechaVto)}</span>
+      <span class="factura-saldo ${m.saldo > 0 ? 'amount-red' : ''}">${fmt(m.saldo)}</span>
+    </div>`).join('');
+
+  const msg = generarMensajeWA(c);
+  const waUrl = c.telefono ? `https://wa.me/${c.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}` : '';
+
+  const waSection = c.telefono
+    ? `<div class="modal-section">
+        <div class="modal-section-title">Mensaje WhatsApp</div>
+        <div class="wa-msg-box">${msg}</div>
+        <a href="${waUrl}" target="_blank" class="btn-wa-full">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Abrir en WhatsApp
+        </a>
+      </div>`
+    : `<div class="no-phone-note">Este cliente no tiene teléfono registrado en el reporte.</div>`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Información</div>
+      <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono_raw || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Administrador</span><span class="detail-value">${c.admin || '—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Saldo total</span><span class="detail-value">${fmt(c.saldoTotal)}</span></div>
+      <div class="detail-row"><span class="detail-label">Días vencido</span><span class="detail-value">${c.diasVencido > 0 ? c.diasVencido + ' días' : '—'}</span></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Comprobantes pendientes (${c.movimientos.length})</div>
+      <div class="facturas-list">${facturas || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin comprobantes detallados</div>'}</div>
+    </div>
+    ${waSection}`;
+
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function generarMensajeWA(c) {
+  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+  
+  const facturasList = c.movimientos.slice(0, 5).map(m =>
+    `  • ${m.tipo} ${m.numero} — Vto: ${fmtDate(m.fechaVto)} — ${fmt(m.saldo)}`
+  ).join('\n');
+
+  return `Estimado/a ${c.nombre},
+
+Le informamos que registra un saldo pendiente de *${fmt(c.saldoTotal)}* con MegaClean Servicios.
+
+Comprobantes pendientes:
+${facturasList}
+
+Le solicitamos regularizar su situación a la brevedad. Para cualquier consulta o para coordinar el pago, no dude en contactarnos.
+
+Gracias,
+Administración MegaClean`;
+}
+
+function closeModal(event) {
+  if (event.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
