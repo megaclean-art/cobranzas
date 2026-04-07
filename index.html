@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1016,11 +1015,12 @@ function handleFile(input) {
   reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', cellDates: true });
+      const wb = XLSX.read(data, { type: 'array', raw: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'dd/mm/yyyy' });
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
       processRows(rows, file.name);
     } catch(err) {
+      console.error(err);
       showToast('Error al leer el archivo. Verificá que sea el reporte de Skylab.');
     }
   };
@@ -1047,114 +1047,115 @@ function parseAmount(val) {
   return parseFloat(s) || 0;
 }
 
-function processRows(rows, filename) {
-  // Detectar fila de encabezados
-  let headerRow = -1;
-  for (let i = 0; i < Math.min(30, rows.length); i++) {
-    const r = rows[i];
-    if (!r) continue;
-    const joined = r.map(c => String(c||'').toLowerCase()).join('|');
-    if (joined.includes('fecha') && (joined.includes('importe') || joined.includes('saldo') || joined.includes('detalle'))) {
-      headerRow = i;
-      break;
-    }
-  }
+// Convierte número serial de Excel a fecha JS
+function excelDateToJS(serial) {
+  if (!serial || isNaN(serial)) return null;
+  // Excel epoch: 1 enero 1900 = 1, con bug del año bisiesto 1900
+  const d = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+  return d;
+}
 
-  // Parsear clientes — el reporte de Crystal Reports tiene una estructura
-  // donde aparece el nombre del cliente seguido de sus movimientos
+function processRows(rows, filename) {
+  // El reporte de Skylab/Crystal Reports tiene esta estructura exacta por fila:
+  // Fila cliente:   C0=nombre, C22="Codigo :", C24=código
+  // Fila dirección: C0=" Direccion:", C3=dirección, C16="Tel.:", C19=teléfono
+  // Fila encabezado: C0="Fecha", C2="Detalle" ...
+  // Fila movimiento: C0=fecha(número), C2=tipo, C10=número, C12=fechaVto(número), C19=saldo
+
   const clientsMap = {};
-  let currentClientName = '';
-  let currentClientCode = '';
-  let currentClientPhone = '';
-  let currentClientDir = '';
-  const today = new Date();
-  today.setHours(0,0,0,0);
+  let currentName = '';
+  let currentPhone = '';
+  let currentDir = '';
+  let currentCode = '';
+  let esperandoDir = false;
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    if (!row || row.every(c => !c)) continue;
-    const cells = row.map(c => String(c||'').trim());
-    const joined = cells.join('|').toLowerCase();
+    if (!row) continue;
 
-    // Detectar línea de cliente (código numérico de 7 dígitos en segunda posición)
-    // Pattern: nombre cliente | código (0000XXX) | dirección | teléfono
-    const codeMatch = cells.find(c => /^0{3,4}\d{3,4}$/.test(c.replace(/[^0-9]/g,'')));
-    if (codeMatch && cells[0] && cells[0].length > 3 && !joined.includes('factura') && !joined.includes('fecha') && !joined.includes('importe')) {
-      const possibleName = cells[0];
-      if (possibleName && possibleName.length > 2 && !/^\d+$/.test(possibleName)) {
-        currentClientName = possibleName.toUpperCase();
-        currentClientCode = codeMatch;
-        currentClientDir = cells[2] || '';
-        currentClientPhone = cells[3] || '';
-        if (!clientsMap[currentClientName]) {
-          clientsMap[currentClientName] = {
-            nombre: currentClientName,
-            codigo: currentClientCode,
-            telefono: limpiarTelefono(currentClientPhone),
-            telefono_raw: currentClientPhone,
-            direccion: currentClientDir,
-            movimientos: [],
-            saldoTotal: 0,
-            admin: buscarAdmin(currentClientName)
-          };
-        }
-        continue;
+    const c = (idx) => row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '';
+    const n = (idx) => {
+      const v = row[idx];
+      if (v === undefined || v === null || v === '') return null;
+      const num = parseFloat(String(v).replace(',','.'));
+      return isNaN(num) ? null : num;
+    };
+
+    const c0 = c(0);
+    const c22 = c(22);
+
+    // ── Línea de nombre de cliente ──
+    // Patrón: C22 = "Codigo :" y C24 = código tipo "0000XXX"
+    if (c22 === 'Codigo :') {
+      currentName = c0.trim();
+      // Limpiar espacio inicial que viene del reporte
+      if (currentName.startsWith(' ')) currentName = currentName.slice(1);
+      currentName = currentName.toUpperCase();
+      currentCode = c(24);
+      currentPhone = '';
+      currentDir = '';
+      esperandoDir = true;
+
+      if (!clientsMap[currentName]) {
+        clientsMap[currentName] = {
+          nombre: currentName,
+          codigo: currentCode,
+          telefono: '',
+          telefono_raw: '',
+          direccion: '',
+          movimientos: [],
+          saldoTotal: 0,
+          admin: buscarAdmin(currentName)
+        };
       }
+      continue;
     }
 
-    // Detectar línea de movimiento (tiene fecha + tipo + número + importe)
-    if (currentClientName && clientsMap[currentClientName]) {
-      // Buscar fecha válida en las primeras celdas
-      let fechaEmision = null, fechaVto = null, importe = 0, saldo = 0, tipo = '', numero = '';
-      
-      for (let ci = 0; ci < cells.length; ci++) {
-        const c = cells[ci];
-        if (!fechaEmision && /\d{1,2}\/\d{1,2}\/\d{4}/.test(c)) {
-          fechaEmision = parseDate(c);
-        } else if (fechaEmision && !fechaVto && /\d{1,2}\/\d{1,2}\/\d{4}/.test(c)) {
-          fechaVto = parseDate(c);
-        }
+    // ── Línea de dirección/teléfono ──
+    if (esperandoDir && c0.replace(/\s/g,'').toLowerCase().startsWith('direccion')) {
+      currentDir = c(3);
+      currentPhone = c(19);
+      if (clientsMap[currentName]) {
+        clientsMap[currentName].direccion = currentDir;
+        clientsMap[currentName].telefono_raw = currentPhone;
+        clientsMap[currentName].telefono = limpiarTelefono(currentPhone);
       }
+      esperandoDir = false;
+      continue;
+    }
 
-      // Detectar tipo de comprobante
+    // ── Línea de movimiento ──
+    // C0 = fecha emisión (número Excel), C2 = tipo comprobante (string),
+    // C10 = número comprobante, C12 = fecha vto (número Excel), C19 = saldo
+    if (currentName && clientsMap[currentName]) {
+      const fechaNum = n(0);
+      const tipo = c(2);
       const tiposValidos = ['factura','n/debito','n/credito','recibo','adelanto','n/débito','n/crédito'];
-      const tipoFound = tiposValidos.find(t => joined.includes(t));
-      if (tipoFound) tipo = tipoFound.toUpperCase().replace('N/DÉBITO','N/DEBITO').replace('N/CRÉDITO','N/CREDITO');
+      const esTipo = tiposValidos.some(t => tipo.toLowerCase().includes(t));
 
-      // Buscar números de comprobante (8 dígitos)
-      const numMatch = cells.find(c => /^\d{7,8}$/.test(c.replace(/[^0-9]/g,'')));
-      if (numMatch) numero = numMatch;
+      if (fechaNum && fechaNum > 40000 && fechaNum < 50000 && esTipo) {
+        const fechaEmision = excelDateToJS(fechaNum);
+        const vtoNum = n(12);
+        const fechaVto = vtoNum ? excelDateToJS(vtoNum) : fechaEmision;
+        const numero = c(10);
+        const saldo = n(19);
 
-      // Buscar importes (números con decimales)
-      const importes = cells.filter(c => /^[\d.,]+$/.test(c.replace(/\s/g,'')) && c.includes(',') || /^\d{3,}[.,]\d{2}$/.test(c));
-      if (importes.length >= 2) {
-        importe = parseAmount(importes[importes.length - 2]);
-        saldo = parseAmount(importes[importes.length - 1]);
-      } else if (importes.length === 1) {
-        saldo = parseAmount(importes[0]);
-      }
-
-      if (fechaEmision && saldo > 0) {
-        clientsMap[currentClientName].movimientos.push({
-          tipo: tipo || 'FACTURA',
-          numero,
-          fechaEmision,
-          fechaVto,
-          importe,
-          saldo
-        });
-        clientsMap[currentClientName].saldoTotal += saldo;
+        if (saldo !== null && saldo > 0) {
+          clientsMap[currentName].movimientos.push({
+            tipo: tipo.toUpperCase(),
+            numero,
+            fechaEmision,
+            fechaVto,
+            importe: n(14) || saldo,
+            saldo
+          });
+          clientsMap[currentName].saldoTotal += saldo;
+        }
       }
     }
   }
 
-  // Si el parseo estructurado no dio buenos resultados,
-  // intentar parseo alternativo buscando patrones en todo el texto
   let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 0);
-  
-  if (clients.length < 5) {
-    clients = parseAlternativo(rows);
-  }
 
   // Calcular estado semáforo
   clients.forEach(c => {
@@ -1169,68 +1170,6 @@ function processRows(rows, filename) {
   const fecha = new Date().toLocaleDateString('es-AR');
   document.getElementById('import-status').textContent = `${clients.length} clientes · ${fecha}`;
   showToast(`✓ ${clients.length} clientes importados correctamente`);
-}
-
-function parseAlternativo(rows) {
-  // Parseo alternativo: busca nombres seguidos de códigos y luego importes
-  const clients = {};
-  let lastName = '';
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row) continue;
-    const cells = row.map(c => String(c||'').trim()).filter(c => c);
-    if (cells.length < 2) continue;
-
-    // Nombre + código en misma fila o consecutivas
-    const first = cells[0];
-    const hasCode = cells.some(c => /^0{3}\d{4,5}$/.test(c));
-    
-    if (first.length > 4 && !/^\d/.test(first) && !first.toLowerCase().includes('fecha') && hasCode) {
-      lastName = first.toUpperCase();
-      if (!clients[lastName]) {
-        const code = cells.find(c => /^0{3}\d{4,5}$/.test(c)) || '';
-        const phone = cells.find(c => /[\d\s\-\+]{7,}/.test(c) && c !== code) || '';
-        clients[lastName] = {
-          nombre: lastName,
-          codigo: code,
-          telefono: limpiarTelefono(phone),
-          telefono_raw: phone,
-          direccion: cells[2] || '',
-          movimientos: [],
-          saldoTotal: 0,
-          admin: buscarAdmin(lastName)
-        };
-      }
-    }
-
-    // Línea de movimiento con importe
-    if (lastName && clients[lastName]) {
-      const montos = cells.filter(c => {
-        const n = parseAmount(c);
-        return n > 100 && c.length > 3;
-      });
-      const fecha = cells.find(c => /\d{1,2}\/\d{1,2}\/\d{4}/.test(c));
-      
-      if (fecha && montos.length > 0) {
-        const saldo = parseAmount(montos[montos.length - 1]);
-        if (saldo > 0) {
-          const fechaVto = cells.filter(c => /\d{1,2}\/\d{1,2}\/\d{4}/.test(c));
-          clients[lastName].movimientos.push({
-            tipo: 'FACTURA',
-            numero: cells.find(c => /^\d{7,8}$/.test(c)) || '',
-            fechaEmision: parseDate(fecha),
-            fechaVto: fechaVto[1] ? parseDate(fechaVto[1]) : parseDate(fecha),
-            importe: parseAmount(montos[0]),
-            saldo
-          });
-          clients[lastName].saldoTotal += saldo;
-        }
-      }
-    }
-  }
-
-  return Object.values(clients).filter(c => c.saldoTotal > 0);
 }
 
 function buscarAdmin(nombre) {
