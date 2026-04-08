@@ -1228,23 +1228,19 @@ function processRows(rows, filename) {
 
 function buscarAdmin(nombre) {
   const n = nombre.toUpperCase().trim();
-  // Búsqueda exacta primero
+  // Búsqueda exacta
   if (ADMINS_MAP[n]) return ADMINS_MAP[n];
-  // Búsqueda parcial
+  // Búsqueda por comienzo de nombre (para casos truncados en el reporte)
   for (const key of Object.keys(ADMINS_MAP)) {
     const k = key.toUpperCase();
-    if (n.includes(k) || k.includes(n) || similaridad(n, k) > 0.75) {
-      return ADMINS_MAP[key];
+    // Solo matchear si uno empieza con el otro y tiene al menos 10 chars
+    if (k.length >= 10 && n.length >= 10) {
+      if (n.startsWith(k) || k.startsWith(n)) {
+        return ADMINS_MAP[key];
+      }
     }
   }
   return null;
-}
-
-function similaridad(a, b) {
-  const long = Math.max(a.length, b.length);
-  if (long === 0) return 1;
-  const common = [...a].filter(c => b.includes(c)).length;
-  return common / long;
 }
 
 function limpiarTelefono(tel) {
