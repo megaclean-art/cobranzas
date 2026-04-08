@@ -384,6 +384,13 @@
   .filter-btn.f-red.active { background: var(--red); border-color: var(--red); color: white; }
   .filter-btn.f-yellow.active { background: var(--yellow); border-color: var(--yellow); color: white; }
   .filter-btn.f-green.active { background: var(--green); border-color: var(--green); color: white; }
+  .filter-btn.f-judicial.active { background: #7c3aed; border-color: #7c3aed; color: white; }
+  .badge-judicial { background: #ede9fe; color: #7c3aed; }
+  .badge-judicial .badge-dot { background: #7c3aed; }
+  .btn-judicial-on { padding: 6px 10px; background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .btn-judicial-on:hover { background: #ddd6fe; }
+  .btn-judicial-off { padding: 6px 10px; background: var(--surface2); color: var(--text3); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .btn-judicial-off:hover { background: var(--border); color: var(--text); }
 
   .sort-select {
     padding: 8px 12px;
@@ -834,6 +841,7 @@
       <button class="filter-btn f-red" id="f-red" onclick="setFilter('red')">🔴 Vencidos</button>
       <button class="filter-btn f-yellow" id="f-yellow" onclick="setFilter('yellow')">🟡 Por vencer</button>
       <button class="filter-btn f-green" id="f-green" onclick="setFilter('green')">🟢 Al día</button>
+      <button class="filter-btn f-judicial" id="f-judicial" onclick="setFilter('judicial')">⚖️ Judicial</button>
       <select class="sort-select" id="sort-select" onchange="renderTable()">
         <option value="monto-desc">Mayor deuda</option>
         <option value="monto-asc">Menor deuda</option>
@@ -975,6 +983,7 @@ const ADMINS_MAP = {
 let currentUser = null;
 let allClients = [];
 let currentFilter = 'all';
+let judiciales = new Set(['COWORKS S.A.S', 'COWORKS', 'NOD LAB', 'LEONI NICOLAS FRANCISCO', 'SURCOR TV SA', 'SUR FINANZAS PSP SA']);
 
 // ============================================================
 // PERSISTENCIA LOCAL
@@ -984,11 +993,14 @@ function saveToStorage() {
     const fecha = new Date().toLocaleDateString('es-AR');
     localStorage.setItem('megaclean_cobranzas_clients', JSON.stringify(allClients));
     localStorage.setItem('megaclean_cobranzas_fecha', fecha);
+    localStorage.setItem('megaclean_judiciales', JSON.stringify([...judiciales]));
   } catch(e) {}
 }
 
 function loadFromStorage() {
   try {
+    const savedJud = localStorage.getItem('megaclean_judiciales');
+    if (savedJud) judiciales = new Set(JSON.parse(savedJud));
     const saved = localStorage.getItem('megaclean_cobranzas_clients');
     const fecha = localStorage.getItem('megaclean_cobranzas_fecha') || '';
     if (saved) {
@@ -1209,6 +1221,18 @@ function processRows(rows, filename) {
     }
   }
 
+  const FECHA_CORTE = new Date(2025, 0, 1); // 01/01/2025
+
+  // Para cada cliente, filtrar solo movimientos posteriores al corte
+  Object.values(clientsMap).forEach(c => {
+    c.movimientos = c.movimientos.filter(m => {
+      const fecha = m.fechaEmision || m.fechaVto;
+      return fecha && new Date(fecha) >= FECHA_CORTE;
+    });
+    c.saldoTotal = c.movimientos.reduce((s, m) => s + m.saldo, 0);
+  });
+
+  // Solo clientes con saldo > 1 después del corte
   let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 1);
 
   // Calcular estado semáforo
@@ -1323,9 +1347,9 @@ function updateStats() {
 // ============================================================
 function setFilter(f) {
   currentFilter = f;
-  ['all','red','yellow','green'].forEach(x => {
+  ['all','red','yellow','green','judicial'].forEach(x => {
     const btn = document.getElementById('f-' + x);
-    btn.classList.remove('active');
+    if (btn) btn.classList.remove('active');
   });
   document.getElementById('f-' + f).classList.add('active');
   renderTable();
@@ -1335,7 +1359,12 @@ function renderTable() {
   const search = document.getElementById('search').value.toLowerCase();
   const sort = document.getElementById('sort-select').value;
 
+  const isJudicial = c => judiciales.has(c.nombre) || judiciales.has(c.nombre.trim());
+
   let data = allClients.filter(c => {
+    if (currentFilter === 'judicial') return isJudicial(c);
+    // En vista normal, excluir judiciales
+    if (isJudicial(c) && currentFilter !== 'judicial') return false;
     if (currentFilter !== 'all' && c.estado !== currentFilter) return false;
     if (search) {
       const hay = (c.nombre + ' ' + (c.admin||'') + ' ' + c.codigo).toLowerCase();
@@ -1371,7 +1400,10 @@ function renderTable() {
   const colores = { red: 'amount-red', yellow: 'amount-yellow', green: 'amount-green' };
 
   const rows = data.map((c, i) => {
-    const badge = c.estado === 'red'
+    const esJudicial = isJudicial(c);
+    const badge = esJudicial
+      ? `<span class="badge badge-judicial"><span class="badge-dot"></span>Judicial</span>`
+      : c.estado === 'red'
       ? `<span class="badge badge-red"><span class="badge-dot"></span>Vencido${c.diasVencido > 0 ? ' · '+c.diasVencido+'d' : ''}</span>`
       : c.estado === 'yellow'
       ? `<span class="badge badge-yellow"><span class="badge-dot"></span>Por vencer</span>`
@@ -1385,6 +1417,10 @@ function renderTable() {
     const waBtn = hasPhone
       ? `<button class="btn-wa" onclick="abrirModal(${i}, event)">💬 WhatsApp</button>`
       : `<button class="btn-detail" onclick="abrirModal(${i}, event)">Ver detalle</button>`;
+
+    const judBtn = esJudicial
+      ? `<button class="btn-judicial-on" onclick="toggleJudicial('${c.nombre.replace(/'/g,"\'")}')">⚖️ Quitar judicial</button>`
+      : `<button class="btn-judicial-off" onclick="toggleJudicial('${c.nombre.replace(/'/g,"\'")}')">⚖️ Marcar judicial</button>`;
 
     return `<tr>
       <td>
@@ -1400,6 +1436,7 @@ function renderTable() {
         <div class="actions">
           ${waBtn}
           ${hasPhone ? `<button class="btn-detail" onclick="abrirModal(${i}, event)">Detalle</button>` : ''}
+          ${judBtn}
         </div>
       </td>
     </tr>`;
@@ -1503,6 +1540,21 @@ function closeModal(event) {
 
 function closeModalDirect() {
   document.getElementById('modal-overlay').style.display = 'none';
+}
+
+// ============================================================
+// JUDICIAL
+// ============================================================
+function toggleJudicial(nombre) {
+  if (judiciales.has(nombre)) {
+    judiciales.delete(nombre);
+    showToast('Quitado de judicial: ' + nombre);
+  } else {
+    judiciales.add(nombre);
+    showToast('Marcado como judicial: ' + nombre);
+  }
+  saveToStorage();
+  renderTable();
 }
 
 // ============================================================
