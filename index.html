@@ -1108,6 +1108,7 @@ function processRows(rows, filename) {
   let currentDir = '';
   let currentCode = '';
   let esperandoDir = false;
+  let lastValidName = '';
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -1125,18 +1126,24 @@ function processRows(rows, filename) {
     const c22 = c(22);
 
     // ── Línea de nombre de cliente ──
-    // Patrón: C22 = "Codigo :" y C24 = código tipo "0000XXX"
-    if (c22 === 'Codigo :') {
-      currentName = c0.trim();
-      // Limpiar espacio inicial que viene del reporte
-      if (currentName.startsWith(' ')) currentName = currentName.slice(1);
-      currentName = currentName.toUpperCase();
-      currentCode = c(24);
+    // Patrón A: C22 = "Codigo :" con nombre en C0 misma fila
+    // Patrón B (Silvana): C23 = "Codigo :" con nombre en fila anterior
+    const c23 = c(23);
+    const esCodigoRow = (c22 === 'Codigo :') || (c23 === 'Codigo :');
+
+    if (esCodigoRow) {
+      let candidateName = c0.trim();
+      if (!candidateName || candidateName.length < 3 || /^[\d]/.test(candidateName)) {
+        candidateName = lastValidName || '';
+      }
+      if (candidateName.startsWith(' ')) candidateName = candidateName.slice(1);
+      currentName = candidateName.toUpperCase();
+      currentCode = c(24) || c(25) || '';
       currentPhone = '';
       currentDir = '';
       esperandoDir = true;
 
-      if (!clientsMap[currentName]) {
+      if (currentName && !clientsMap[currentName]) {
         clientsMap[currentName] = {
           nombre: currentName,
           codigo: currentCode,
@@ -1150,6 +1157,13 @@ function processRows(rows, filename) {
       }
       continue;
     }
+
+    // Guardar el último nombre válido de cliente
+    if (c0 && c0.length > 3 && !/^[\d]/.test(c0) &&
+        !['Fecha','Detalle','Direccion','Codigo'].some(x => c0.includes(x))) {
+      lastValidName = c0.trim();
+    }
+
 
     // ── Línea de dirección/teléfono ──
     if (esperandoDir && c0.replace(/\s/g,'').toLowerCase().startsWith('direccion')) {
