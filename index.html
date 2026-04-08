@@ -1366,7 +1366,13 @@ function renderTable() {
   const search = document.getElementById('search').value.toLowerCase();
   const sort = document.getElementById('sort-select').value;
 
-  const isJudicial = c => judiciales.has(c.nombre) || judiciales.has(c.nombre.trim());
+  const isJudicial = c => {
+    const n = c.nombre.trim().toUpperCase();
+    for (const j of judiciales) {
+      if (n === j.trim().toUpperCase()) return true;
+    }
+    return false;
+  };
 
   let data = allClients.filter(c => {
     if (currentFilter === 'judicial') return isJudicial(c);
@@ -1553,11 +1559,17 @@ function closeModalDirect() {
 // JUDICIAL
 // ============================================================
 function toggleJudicial(nombre) {
-  if (judiciales.has(nombre)) {
-    judiciales.delete(nombre);
+  const n = nombre.trim().toUpperCase();
+  // Buscar si ya existe (por si fue guardado con diferente capitalización)
+  let found = null;
+  for (const j of judiciales) {
+    if (j.trim().toUpperCase() === n) { found = j; break; }
+  }
+  if (found !== null) {
+    judiciales.delete(found);
     showToast('Quitado de judicial: ' + nombre);
   } else {
-    judiciales.add(nombre);
+    judiciales.add(nombre.trim());
     showToast('Marcado como judicial: ' + nombre);
   }
   saveToStorage();
