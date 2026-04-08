@@ -977,6 +977,45 @@ let allClients = [];
 let currentFilter = 'all';
 
 // ============================================================
+// PERSISTENCIA LOCAL
+// ============================================================
+function saveToStorage() {
+  try {
+    const fecha = new Date().toLocaleDateString('es-AR');
+    localStorage.setItem('megaclean_cobranzas_clients', JSON.stringify(allClients));
+    localStorage.setItem('megaclean_cobranzas_fecha', fecha);
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const saved = localStorage.getItem('megaclean_cobranzas_clients');
+    const fecha = localStorage.getItem('megaclean_cobranzas_fecha') || '';
+    if (saved) {
+      const clients = JSON.parse(saved);
+      if (clients && clients.length > 0) {
+        // Restaurar fechas como objetos Date
+        clients.forEach(c => {
+          c.movimientos = c.movimientos.map(m => ({
+            ...m,
+            fechaEmision: m.fechaEmision ? new Date(m.fechaEmision) : null,
+            fechaVto: m.fechaVto ? new Date(m.fechaVto) : null,
+          }));
+          c.estado = calcularEstado(c);
+          c.diasVencido = calcularDiasVencido(c);
+        });
+        allClients = clients;
+        updateStats();
+        renderTable();
+        document.getElementById('import-status').textContent = `${clients.length} clientes · ${fecha} (guardado)`;
+      }
+    }
+  } catch(e) {
+    console.warn('Error cargando datos guardados:', e);
+  }
+}
+
+// ============================================================
 // LOGIN
 // ============================================================
 function doLogin() {
@@ -987,6 +1026,7 @@ function doLogin() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('topbar-user').textContent = currentUser.nombre;
+    loadFromStorage();
   } else {
     document.getElementById('login-error').style.display = 'block';
   }
