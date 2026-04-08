@@ -1209,7 +1209,7 @@ function processRows(rows, filename) {
     }
   }
 
-  let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 0);
+  let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 1);
 
   // Calcular estado semáforo
   clients.forEach(c => {
