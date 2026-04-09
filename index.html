@@ -344,8 +344,15 @@ function doLogin(){
     document.getElementById('headerAvatar').textContent=sup.name[0];
     document.getElementById('loginError').style.display='none';
     buildTabBar();
-    // Cargar mes desde Firebase al entrar
-    fsLoadMes(DB.mesActual).then(d=>{if(d&&d.data){_mesData[DB.mesActual]=d.data;save();}switchTab(sup.role==='admin'?'resumen':'listado');});
+    // Cargar mes desde Firebase al entrar — esperar antes de renderizar
+    const mesActual=DB.mesActual;
+    document.getElementById('mainContent').innerHTML='<div class="empty"><div class="empty-icon">⏳</div><p>Cargando datos...</p></div>';
+    fsLoadMes(mesActual).then(function(d){
+      if(d&&d.data){_mesData[mesActual]=d.data;save();}
+      switchTab(sup.role==='admin'?'resumen':'listado');
+    }).catch(function(){
+      switchTab(sup.role==='admin'?'resumen':'listado');
+    });
   } else {
     document.getElementById('loginError').style.display='block';
   }
