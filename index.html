@@ -2,1589 +2,1315 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MegaClean · Cobranzas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MegaClean · Sistema de Supervisión</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, setDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBg7lvQteU0aHwEyI1qe10UPK81-9DL0Ng",
+    authDomain: "mega-clean-12f17.firebaseapp.com",
+    projectId: "mega-clean-12f17",
+    storageBucket: "mega-clean-12f17.firebasestorage.app",
+    messagingSenderId: "446418900871",
+    appId: "1:446418900871:web:b178a54ceeb66944882522"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._fsLib = { collection, addDoc, getDocs, getDoc, deleteDoc, doc, setDoc, onSnapshot, query, orderBy, where };
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
-  :root {
-    --bg: #f5f4f0;
-    --surface: #ffffff;
-    --surface2: #f0efe9;
-    --border: #e2e0d8;
-    --text: #1a1916;
-    --text2: #6b6860;
-    --text3: #9e9c96;
-    --accent: #1a1916;
-    --green: #2d6a4f;
-    --green-bg: #d8f3dc;
-    --yellow: #b5620a;
-    --yellow-bg: #fff0d0;
-    --red: #9b2335;
-    --red-bg: #fde8eb;
-    --blue: #1a4f8a;
-    --blue-bg: #ddeeff;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 14px;
-  }
-
-  /* LOGIN */
-  #login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-  }
-
-  .login-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 48px 40px;
-    width: 360px;
-    box-shadow: var(--shadow-md);
-  }
-
-  .login-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 32px;
-  }
-
-  .login-logo-mark {
-    width: 36px;
-    height: 36px;
-    background: var(--accent);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .login-logo-text {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-
-  .login-logo-sub {
-    font-size: 11px;
-    color: var(--text3);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .login-title {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    margin-bottom: 6px;
-  }
-
-  .login-sub {
-    font-size: 13px;
-    color: var(--text2);
-    margin-bottom: 28px;
-  }
-
-  .form-group {
-    margin-bottom: 16px;
-  }
-
-  .form-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text2);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .form-input {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 14px;
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .form-input:focus {
-    border-color: var(--accent);
-  }
-
-  .btn-primary {
-    width: 100%;
-    padding: 11px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.15s;
-  }
-
-  .btn-primary:hover { opacity: 0.85; }
-
-  .login-error {
-    background: var(--red-bg);
-    color: var(--red);
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-top: 12px;
-    display: none;
-  }
-
-  /* APP SHELL */
-  #app { display: none; }
-
-  .topbar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .topbar-logo {
-    width: 28px;
-    height: 28px;
-    background: var(--accent);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  .topbar-title {
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-
-  .topbar-sep {
-    color: var(--border);
-    font-size: 18px;
-  }
-
-  .topbar-section {
-    font-size: 13px;
-    color: var(--text2);
-  }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .topbar-user {
-    font-size: 12px;
-    color: var(--text2);
-  }
-
-  .btn-logout {
-    font-size: 12px;
-    color: var(--text3);
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 4px 8px;
-    border-radius: 6px;
-  }
-  .btn-logout:hover { background: var(--surface2); color: var(--text); }
-
-  /* MAIN */
-  .main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 28px 24px;
-  }
-
-  /* IMPORT PANEL */
-  .import-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .import-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--surface2);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .import-info { flex: 1; min-width: 200px; }
-
-  .import-info h3 {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 2px;
-  }
-
-  .import-info p {
-    font-size: 12px;
-    color: var(--text2);
-  }
-
-  .import-status {
-    font-size: 12px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
-  }
-
-  .btn-import {
-    padding: 9px 18px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: opacity 0.15s;
-  }
-  .btn-import:hover { opacity: 0.85; }
-
-  #file-input { display: none; }
-
-  /* STATS ROW */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text3);
-    margin-bottom: 6px;
-  }
-
-  .stat-value {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    font-family: 'DM Mono', monospace;
-  }
-
-  .stat-sub {
-    font-size: 11px;
-    color: var(--text2);
-    margin-top: 2px;
-  }
-
-  .stat-red .stat-value { color: var(--red); }
-  .stat-yellow .stat-value { color: var(--yellow); }
-  .stat-green .stat-value { color: var(--green); }
-
-  /* FILTERS */
-  .filters-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .search-input {
-    flex: 1;
-    min-width: 220px;
-    padding: 9px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 13px;
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-  }
-  .search-input:focus { border-color: var(--accent); }
-
-  .filter-btn {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--text2);
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .filter-btn:hover { background: var(--surface2); }
-  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-  .filter-btn.f-red.active { background: var(--red); border-color: var(--red); color: white; }
-  .filter-btn.f-yellow.active { background: var(--yellow); border-color: var(--yellow); color: white; }
-  .filter-btn.f-green.active { background: var(--green); border-color: var(--green); color: white; }
-  .filter-btn.f-judicial.active { background: #7c3aed; border-color: #7c3aed; color: white; }
-  .badge-judicial { background: #ede9fe; color: #7c3aed; }
-  .badge-judicial .badge-dot { background: #7c3aed; }
-  .btn-judicial-on { padding: 6px 10px; background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; border-radius: 6px; font-family: inherit; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
-  .btn-judicial-on:hover { background: #ddd6fe; }
-  .btn-judicial-off { padding: 6px 10px; background: var(--surface2); color: var(--text3); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 11px; cursor: pointer; white-space: nowrap; }
-  .btn-judicial-off:hover { background: var(--border); color: var(--text); }
-
-  .sort-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 12px;
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-    cursor: pointer;
-  }
-
-  /* TABLE */
-  .table-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .table-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .table-title {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text2);
-  }
-
-  .table-count {
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    color: var(--text3);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead th {
-    padding: 10px 16px;
-    text-align: left;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text3);
-    font-weight: 500;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-  }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--surface2); }
-
-  tbody td {
-    padding: 12px 16px;
-    font-size: 13px;
-    vertical-align: middle;
-  }
-
-  .client-name {
-    font-weight: 500;
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.3;
-  }
-
-  .client-code {
-    font-size: 11px;
-    color: var(--text3);
-    font-family: 'DM Mono', monospace;
-    margin-top: 1px;
-  }
-
-  .client-phone {
-    font-size: 12px;
-    color: var(--text2);
-  }
-
-  .amount {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    text-align: right;
-  }
-
-  .amount-red { color: var(--red); }
-  .amount-yellow { color: var(--yellow); }
-  .amount-green { color: var(--green); }
-
-  /* BADGE */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-  }
-
-  .badge-red { background: var(--red-bg); color: var(--red); }
-  .badge-red .badge-dot { background: var(--red); }
-  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
-  .badge-yellow .badge-dot { background: var(--yellow); }
-  .badge-green { background: var(--green-bg); color: var(--green); }
-  .badge-green .badge-dot { background: var(--green); }
-
-  /* ACTIONS */
-  .actions {
-    display: flex;
-    gap: 6px;
-    justify-content: flex-end;
-  }
-
-  .btn-wa {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 12px;
-    background: #25D366;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    transition: opacity 0.15s;
-  }
-  .btn-wa:hover { opacity: 0.85; }
-
-  .btn-detail {
-    padding: 6px 10px;
-    background: var(--surface2);
-    color: var(--text2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-detail:hover { background: var(--border); color: var(--text); }
-
-  /* EMPTY STATE */
-  .empty-state {
-    padding: 60px 20px;
-    text-align: center;
-    color: var(--text3);
-  }
-
-  .empty-icon {
-    font-size: 36px;
-    margin-bottom: 12px;
-  }
-
-  .empty-title {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text2);
-    margin-bottom: 6px;
-  }
-
-  .empty-sub {
-    font-size: 13px;
-  }
-
-  /* MODAL */
-  .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    display: none;
-  }
-
-  .modal {
-    background: var(--surface);
-    border-radius: 16px;
-    padding: 28px;
-    width: 100%;
-    max-width: 560px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-md);
-  }
-
-  .modal-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-
-  .modal-title {
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-
-  .modal-subtitle {
-    font-size: 12px;
-    color: var(--text2);
-    margin-top: 2px;
-    font-family: 'DM Mono', monospace;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: var(--text3);
-    padding: 0 4px;
-    line-height: 1;
-  }
-
-  .modal-section {
-    margin-bottom: 20px;
-  }
-
-  .modal-section-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text3);
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--surface2);
-    font-size: 13px;
-  }
-
-  .detail-row:last-child { border-bottom: none; }
-
-  .detail-label { color: var(--text2); }
-  .detail-value { font-weight: 500; font-family: 'DM Mono', monospace; }
-
-  .facturas-list { display: flex; flex-direction: column; gap: 6px; }
-
-  .factura-item {
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-  }
-
-  .factura-num { font-family: 'DM Mono', monospace; color: var(--text2); }
-  .factura-dates { color: var(--text2); text-align: center; }
-  .factura-saldo { font-weight: 500; font-family: 'DM Mono', monospace; }
-
-  .wa-msg-box {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-    font-size: 13px;
-    line-height: 1.6;
-    color: var(--text);
-    white-space: pre-wrap;
-    margin-bottom: 12px;
-  }
-
-  .btn-wa-full {
-    width: 100%;
-    padding: 11px;
-    background: #25D366;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: opacity 0.15s;
-  }
-  .btn-wa-full:hover { opacity: 0.85; }
-
-  .no-phone-note {
-    font-size: 12px;
-    color: var(--text3);
-    text-align: center;
-    padding: 10px;
-  }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--accent);
-    color: white;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    box-shadow: var(--shadow-md);
-    z-index: 300;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-
-  /* ADMIN TAG */
-  .admin-tag {
-    font-size: 11px;
-    color: var(--blue);
-    background: var(--blue-bg);
-    padding: 2px 7px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-top: 3px;
-  }
-
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    .stats-row { grid-template-columns: repeat(2, 1fr); }
-    .main { padding: 16px; }
-    thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
-  }
+:root{
+  --blue:#0e8fd6;--blue-dark:#0a6fa8;--blue-deep:#064d7a;
+  --green:#5bb84a;--green-dark:#3d8f30;--green-light:#a8d89e;
+  --bg:#f0f6fb;--surface:#ffffff;--surface2:#e8f2f9;
+  --border:#cde3f0;--danger:#e03e3e;--warn:#e08c0a;
+  --text:#0d2d42;--text2:#4a7a99;--text3:#9bbdd0;
+  --radius:14px;--radius-sm:9px;
+  --shadow:0 2px 16px rgba(14,143,214,.10);
+  --shadow-lg:0 8px 40px rgba(14,143,214,.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+#loginScreen{align-items:center;justify-content:center;padding:2rem;background:linear-gradient(160deg,#0a6fa8 0%,#0e8fd6 45%,#3db8a0 100%);position:relative;overflow:hidden;}
+#loginScreen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 10%,rgba(255,255,255,.12) 0%,transparent 60%),radial-gradient(ellipse at 10% 90%,rgba(91,184,74,.2) 0%,transparent 50%);}
+.login-card{width:100%;max-width:380px;background:white;border-radius:24px;padding:2.5rem 2rem;box-shadow:var(--shadow-lg);position:relative;z-index:1;}
+.login-logo{text-align:center;margin-bottom:1.8rem;}
+.login-tagline{text-align:center;font-size:.82rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-top:.4rem;margin-bottom:1.8rem;}
+.app-name{text-align:center;font-size:1.15rem;font-weight:800;color:var(--blue-dark);margin-bottom:.2rem;}
+.field{margin-bottom:1.1rem;}
+.field label{display:block;font-size:.75rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.45rem;}
+.field input{width:100%;padding:.85rem 1rem;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Nunito',sans-serif;font-size:.95rem;transition:border-color .2s,box-shadow .2s;outline:none;}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,143,214,.12);}
+.btn{width:100%;padding:.9rem;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border:none;border-radius:var(--radius-sm);color:white;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:800;letter-spacing:.03em;cursor:pointer;transition:opacity .15s,transform .1s,box-shadow .2s;box-shadow:0 4px 16px rgba(14,143,214,.35);}
+.btn:active{transform:scale(.98);opacity:.92;}
+.btn.green{background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);box-shadow:0 4px 16px rgba(91,184,74,.3);}
+.btn.secondary{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);box-shadow:none;}
+.btn.danger{background:linear-gradient(135deg,#e03e3e,#b52d2d);box-shadow:0 4px 12px rgba(224,62,62,.3);}
+.btn.sm{padding:.5rem .9rem;font-size:.83rem;width:auto;border-radius:7px;}
+.error-msg{color:var(--danger);font-size:.85rem;margin-top:.7rem;text-align:center;display:none;}
+.app-header{background:white;border-bottom:1.5px solid var(--border);padding:.75rem 1.2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(14,143,214,.08);}
+.header-logo{display:flex;align-items:center;gap:.6rem;}
+.header-logo-sub{font-size:.65rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;}
+.header-right{display:flex;align-items:center;gap:.5rem;}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:white;flex-shrink:0;}
+.header-name{font-size:.82rem;font-weight:700;color:var(--text2);}
+.icon-btn{background:none;border:none;cursor:pointer;color:var(--text2);padding:.4rem;border-radius:7px;transition:color .2s,background .2s;display:flex;align-items:center;}
+.icon-btn:hover{color:var(--blue);background:var(--surface2);}
+.tab-bar{display:flex;background:white;border-top:1.5px solid var(--border);position:fixed;bottom:0;left:0;right:0;z-index:99;box-shadow:0 -2px 12px rgba(14,143,214,.08);}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.65rem .5rem .5rem;cursor:pointer;transition:color .2s;color:var(--text3);font-size:.62rem;font-weight:700;gap:.22rem;border:none;background:none;letter-spacing:.02em;}
+.tab-item svg{width:20px;height:20px;}
+.tab-item.active{color:var(--blue);}
+.main-content{flex:1;overflow-y:auto;padding:1rem 1rem 5.5rem;}
+.card{background:white;border:1.5px solid var(--border);border-radius:var(--radius);padding:1.2rem;margin-bottom:.8rem;box-shadow:var(--shadow);}
+.card-title{font-size:.72rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.8rem;display:flex;align-items:center;gap:.5rem;}
+.tag{display:inline-flex;align-items:center;justify-content:center;padding:.22rem .6rem;border-radius:20px;font-size:.72rem;font-weight:800;}
+.tag-mb{background:rgba(91,184,74,.15);color:var(--green-dark);}
+.tag-b{background:rgba(14,143,214,.12);color:var(--blue-dark);}
+.tag-r{background:rgba(224,62,62,.10);color:var(--danger);}
+.tag-m{background:rgba(224,62,62,.18);color:var(--danger);}
+.hist-item.alerta{border-left:4px solid var(--danger);background:rgba(224,62,62,.03);}
+.alerta-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:800;color:var(--danger);margin-top:.3rem;}
+.search-wrap{position:relative;margin-bottom:1rem;}
+.search-wrap input{width:100%;padding:.75rem 1rem .75rem 2.8rem;background:white;border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;box-shadow:var(--shadow);}
+.search-wrap input:focus{border-color:var(--blue);}
+.search-icon{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}
+/* Cliente item con badge de estado */
+.client-item{display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem;background:white;border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.5rem;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .1s;box-shadow:var(--shadow);}
+.client-item:active{transform:scale(.99);border-color:var(--blue);}
+.client-item.done-item{border-left:4px solid var(--green);}
+.client-item.extra-item{border-left:4px solid var(--warn);}
+.client-avatar{width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.95rem;color:white;}
+.client-info{flex:1;min-width:0;}
+.client-name{font-weight:800;font-size:.95rem;margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.client-addr{font-size:.78rem;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.client-status-badge{font-size:.7rem;font-weight:800;margin-top:.2rem;}
+.chevron{color:var(--text3);flex-shrink:0;}
+/* Formulario F013 */
+.form-section{background:white;border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:.8rem;overflow:hidden;box-shadow:var(--shadow);}
+.form-section-header{padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;transition:background .15s;}
+.form-section-header:active{background:var(--surface2);}
+.section-title{font-weight:800;font-size:.93rem;display:flex;align-items:center;gap:.6rem;color:var(--text);}
+.section-pts{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text2);font-weight:500;}
+.section-badge{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.78rem;font-weight:500;color:white;}
+.form-section-body{padding:0 1.2rem 1.2rem;display:none;}
+.form-section-body.open{display:block;}
+.radio-group{display:flex;gap:.4rem;flex-wrap:wrap;}
+.radio-opt input{display:none;}
+.radio-opt label{display:block;padding:.38rem .75rem;border:1.5px solid var(--border);border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text2);background:var(--bg);}
+.radio-opt input:checked+label.mb{border-color:var(--green);background:rgba(91,184,74,.12);color:var(--green-dark);}
+.radio-opt input:checked+label.b{border-color:var(--blue);background:rgba(14,143,214,.1);color:var(--blue-dark);}
+.radio-opt input:checked+label.r{border-color:var(--warn);background:rgba(224,140,10,.1);color:var(--warn);}
+.radio-opt input:checked+label.m{border-color:var(--danger);background:rgba(224,62,62,.08);color:var(--danger);}
+.radio-opt input:checked+label.na{border-color:var(--text2);background:rgba(74,122,153,.1);color:var(--text);}
+.radio-opt input:checked+label.cumple{border-color:var(--green);background:rgba(91,184,74,.12);color:var(--green-dark);}
+.radio-opt input:checked+label.nocumple{border-color:var(--danger);background:rgba(224,62,62,.08);color:var(--danger);}
+.form-row{padding:.75rem 0;border-bottom:1px solid var(--border);}
+.form-row:last-child{border-bottom:none;}
+.form-row-label{font-size:.87rem;font-weight:700;margin-bottom:.5rem;color:var(--text);}
+.form-row-obs{margin-top:.45rem;}
+.form-row-obs input{width:100%;padding:.48rem .75rem;background:var(--bg);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.82rem;outline:none;}
+.score-bar{background:white;border:1.5px solid var(--border);border-radius:var(--radius);padding:1.1rem;margin-bottom:.8rem;position:sticky;top:60px;z-index:90;box-shadow:var(--shadow);}
+.score-number{font-family:'DM Mono',monospace;font-size:2.4rem;font-weight:500;line-height:1;color:var(--blue-dark);}
+.score-label{font-size:.78rem;color:var(--text2);margin-top:.2rem;font-weight:600;}
+.score-progress{margin-top:.7rem;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.score-fill{height:100%;border-radius:4px;transition:width .4s,background .4s;}
+.geo-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.42rem .85rem;border-radius:20px;font-size:.78rem;font-weight:700;border:1.5px solid var(--border);color:var(--text2);background:white;margin-bottom:1rem;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);}
+.geo-badge.confirmed{border-color:var(--green);color:var(--green-dark);background:rgba(91,184,74,.07);}
+.geo-badge.failed{border-color:var(--danger);color:var(--danger);}
+.geo-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.geo-dot.pulse{animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+/* Historial */
+.hist-item{background:white;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .2s,box-shadow .2s;box-shadow:var(--shadow);}
+.hist-item:active{border-color:var(--blue);}
+.hist-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.35rem;}
+.hist-name{font-weight:800;font-size:.93rem;color:var(--text);}
+.hist-meta{font-size:.78rem;color:var(--text2);font-weight:600;}
+/* Progress bar */
+.prog-bar-bg{background:var(--border);border-radius:99px;height:10px;overflow:hidden;margin-top:.4rem;}
+.prog-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .6s;}
+/* Admin */
+.admin-section{margin-bottom:1.5rem;}
+.admin-section h3{font-size:.78rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.75rem;}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;color:var(--text2);background:white;}
+.upload-zone:hover{border-color:var(--blue);background:var(--surface2);color:var(--text);}
+.upload-zone input{display:none;}
+.client-manage-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.4rem;}
+.supervisor-item{display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.4rem;}
+.pill{display:inline-flex;align-items:center;padding:.18rem .6rem;border-radius:20px;font-size:.72rem;font-weight:800;background:rgba(14,143,214,.12);color:var(--blue-dark);}
+.pill.admin{background:rgba(224,62,62,.1);color:var(--danger);}
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(6,30,48,.55);backdrop-filter:blur(4px);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:white;border:1.5px solid var(--border);border-radius:22px 22px 0 0;width:100%;max-width:540px;padding:1.5rem 1.5rem 2.5rem;max-height:90vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 1.2rem;}
+.modal h3{font-size:1.1rem;font-weight:800;margin-bottom:1rem;color:var(--text);}
+.toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--blue-dark);border-radius:30px;padding:.6rem 1.2rem;font-size:.85rem;font-weight:700;color:white;z-index:300;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;box-shadow:0 4px 20px rgba(14,143,214,.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);}
+.empty-icon{font-size:2.5rem;margin-bottom:.8rem;}
+.empty p{font-size:.9rem;font-weight:600;}
+.divider{height:1px;background:var(--border);margin:.8rem 0;}
+.text-sm{font-size:.85rem;color:var(--text2);font-weight:600;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.mt-sm{margin-top:.6rem;}.mt{margin-top:1rem;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;}
+input::placeholder{color:var(--text3);}
+.page-title{font-size:1.15rem;font-weight:900;margin-bottom:.2rem;color:var(--text);}
+.page-sub{font-size:.83rem;color:var(--text2);font-weight:600;margin-bottom:1rem;}
+.inline-input{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:.8rem 1rem;color:var(--text);font-family:'Nunito',sans-serif;font-size:.95rem;outline:none;width:100%;transition:border-color .2s;}
+.inline-input:focus{border-color:var(--blue);}
+.signature-canvas{border:2px dashed var(--border);border-radius:var(--radius-sm);background:white;cursor:crosshair;touch-action:none;display:block;width:100%;}
+.signature-canvas.signed{border-color:var(--green);}
+/* Resumen coordinador */
+.stat-card{background:white;border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:2rem;font-weight:900;color:var(--blue);line-height:1;}
+.stat-label{font-size:.7rem;color:var(--text2);font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-top:.3rem;}
+.stat-num.green{color:var(--green);}
+.stat-num.orange{color:var(--warn);}
+/* Sup card coordinador */
+.sup-card{background:white;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:.8rem;box-shadow:var(--shadow);}
+.sup-card-header{padding:1rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border-bottom:1px solid var(--border);}
+.sup-card-header:active{background:var(--surface2);}
+.sup-pct{font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--blue);}
+.sup-collapse{display:none;}
+.sup-collapse.open{display:block;}
+/* Chips filtro historial */
+.hist-chip{padding:.4rem .9rem;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.hist-chip.active{background:var(--blue);border-color:var(--blue);color:white;}
+.hist-chip-sm{padding:.28rem .7rem;border-radius:99px;border:1.5px solid var(--border);background:white;font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.hist-chip-sm.active{background:var(--blue-dark);border-color:var(--blue-dark);color:white;}
+
+.form-select{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;outline:none;background:var(--bg);color:var(--text);}
+.form-select:focus{border-color:var(--blue);}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-box">
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-mark">M</div>
-      <div>
-        <div class="login-logo-text">MegaClean</div>
-        <div class="login-logo-sub">Administración</div>
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#0e8fd6 0%,#0a6fa8 100%);box-shadow:0 8px 28px rgba(14,143,214,.35);margin-bottom:.5rem">
+        <span style="font-family:'Nunito',sans-serif;font-size:2rem;font-weight:900;color:white;letter-spacing:-1px">M</span>
+      </div>
+      <div style="font-size:2rem;font-weight:900;letter-spacing:-.5px;line-height:1;margin-top:.4rem">
+        <span style="color:#0e8fd6">Mega</span><span style="color:#0a6fa8">Clean</span><span style="color:#5bb84a;font-size:1.1rem">®</span>
       </div>
     </div>
-    <div class="login-title">Gestión de cobranzas</div>
-    <div class="login-sub">Ingresá con tu usuario para continuar</div>
-    <div class="form-group">
-      <label class="form-label">Usuario</label>
-      <input class="form-input" id="login-user" type="text" placeholder="usuario" autocomplete="username">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Contraseña</label>
-      <input class="form-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
-    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div class="app-name">Sistema de Supervisión</div>
+    <div class="login-tagline">Control de Calidad F013</div>
+    <div class="field"><label>Usuario</label><input type="text" id="loginUser" placeholder="tu usuario" autocomplete="username"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn" onclick="doLogin()">Ingresar</button>
+    <p class="error-msg" id="loginError">Usuario o contraseña incorrectos</p>
   </div>
 </div>
 
 <!-- APP -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-logo">M</div>
-      <span class="topbar-title">MegaClean</span>
-      <span class="topbar-sep">/</span>
-      <span class="topbar-section">Cobranzas</span>
-    </div>
-    <div class="topbar-right">
-      <span class="topbar-user" id="topbar-user"></span>
-      <button class="btn-logout" onclick="doLogout()">Salir</button>
-    </div>
-  </div>
-
-  <div class="main">
-
-    <!-- IMPORT -->
-    <div class="import-panel">
-      <div class="import-icon">📊</div>
-      <div class="import-info">
-        <h3>Importar reporte Skylab</h3>
-        <p>Cargá el archivo XLS mensual de movimientos pendientes</p>
+<div id="appScreen" class="screen">
+  <header class="app-header">
+    <div class="header-logo">
+      <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#0e8fd6,#0a6fa8);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(14,143,214,.3)">
+        <span style="font-family:'Nunito',sans-serif;font-size:1.15rem;font-weight:900;color:white">M</span>
       </div>
-      <div class="import-status" id="import-status">Sin datos cargados</div>
-      <input type="file" id="file-input" accept=".xls,.xlsx" onchange="handleFile(this)">
-      <button class="btn-import" onclick="document.getElementById('file-input').click()">Cargar XLS</button>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total clientes</div>
-        <div class="stat-value" id="stat-total">—</div>
-        <div class="stat-sub">con saldo pendiente</div>
-      </div>
-      <div class="stat-card stat-red">
-        <div class="stat-label">🔴 Vencidos</div>
-        <div class="stat-value" id="stat-red">—</div>
-        <div class="stat-sub" id="stat-red-monto">—</div>
-      </div>
-      <div class="stat-card stat-yellow">
-        <div class="stat-label">🟡 Por vencer</div>
-        <div class="stat-value" id="stat-yellow">—</div>
-        <div class="stat-sub" id="stat-yellow-monto">—</div>
-      </div>
-      <div class="stat-card stat-green">
-        <div class="stat-label">🟢 Al día</div>
-        <div class="stat-value" id="stat-green">—</div>
-        <div class="stat-sub" id="stat-green-monto">—</div>
-      </div>
-    </div>
-
-    <!-- FILTERS -->
-    <div class="filters-row">
-      <input type="text" class="search-input" id="search" placeholder="Buscar cliente o administrador..." oninput="renderTable()">
-      <button class="filter-btn active" id="f-all" onclick="setFilter('all')">Todos</button>
-      <button class="filter-btn f-red" id="f-red" onclick="setFilter('red')">🔴 Vencidos</button>
-      <button class="filter-btn f-yellow" id="f-yellow" onclick="setFilter('yellow')">🟡 Por vencer</button>
-      <button class="filter-btn f-green" id="f-green" onclick="setFilter('green')">🟢 Al día</button>
-      <button class="filter-btn f-judicial" id="f-judicial" onclick="setFilter('judicial')">⚖️ Judicial</button>
-      <select class="sort-select" id="sort-select" onchange="renderTable()">
-        <option value="monto-desc">Mayor deuda</option>
-        <option value="monto-asc">Menor deuda</option>
-        <option value="nombre-asc">Nombre A-Z</option>
-        <option value="dias-desc">Más días vencidos</option>
-      </select>
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-wrap">
-      <div class="table-header">
-        <span class="table-title">Clientes con saldo pendiente</span>
-        <span class="table-count" id="table-count">—</span>
-      </div>
-      <div id="table-container">
-        <div class="empty-state">
-          <div class="empty-icon">📂</div>
-          <div class="empty-title">Sin datos</div>
-          <div class="empty-sub">Cargá el reporte XLS de Skylab para comenzar</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- MODAL DETALLE -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal" id="modal">
-    <div class="modal-header">
       <div>
-        <div class="modal-title" id="modal-title"></div>
-        <div class="modal-subtitle" id="modal-subtitle"></div>
+        <div style="font-size:.95rem;font-weight:900;line-height:1.1"><span style="color:#0e8fd6">Mega</span><span style="color:#0a6fa8">Clean</span><span style="color:#5bb84a;font-size:.7rem">®</span></div>
+        <div class="header-logo-sub" id="headerSub">Sistema de Supervisión</div>
       </div>
-      <button class="modal-close" onclick="closeModalDirect()">✕</button>
     </div>
-    <div id="modal-body"></div>
+    <div class="header-right">
+      <div class="avatar" id="headerAvatar">?</div>
+      <span class="header-name" id="headerName"></span>
+      <button class="icon-btn" onclick="doLogout()" title="Salir">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </header>
+  <div class="main-content" id="mainContent"></div>
+  <nav class="tab-bar" id="tabBar"></nav>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent">
+    <div class="modal-handle"></div>
+    <div id="modalBody"></div>
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
+<!-- ═══ FIREBASE + DB ═══ -->
 <script>
-// ============================================================
-// USUARIOS
-// ============================================================
-const USERS = {
-  'ADMIN': { pass: 'mega2024', nombre: 'Administración', rol: 'admin' },
-  'COBROS': { pass: 'cobros24', nombre: 'Cobranzas', rol: 'cobros' }
+const DB = {
+  supervisors: [
+    { user: 'admin', pass: 'admin123', name: 'Administrador', role: 'admin' }
+  ],
+  clients: [],
+  records: [],
+  mesActual: getCurrentMes()
 };
+// Mes actual en formato YYYY-MM
+function getCurrentMes(){return new Date().toISOString().slice(0,7);}
+function formatMes(ym){if(!ym)return'';const[y,m]=ym.split('-');const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];return meses[parseInt(m)-1]+' '+y;}
 
-// ============================================================
-// ADMINISTRADORES DE CONSORCIO
-// ============================================================
-const ADMINS_MAP = {
-  'CONSORCIO ALLENDE OESTE': 'ADM BERTINATTI',
-  'CONSORCIO MARTIN GARCIA 944': 'ADM BERTINATTI',
-  'ED. BERTINATTI  LIBERTAD': 'ADM BERTINATTI',
-  'ED. BERTTINATTI  ANTOLIN': 'ADM BERTINATTI',
-  'ED. EL GRINGO': 'ADM BERTINATTI',
-  'EDIFICIO LAS HERAS 843': 'ADM BERTINATTI',
-  'CONS. COPR. EDIFICIO ORION IV': 'ADM CAFFARATTI',
-  'CONS. COPR. EDIFICIO TOWER': 'ADM CAFFARATTI',
-  'CONS. COPROPIETARIOS EDIFICIO LAUSANNE': 'ADM CAFFARATTI',
-  'CONS. EDIFICIO MIRADORES DEL BUEN PASTOR': 'ADM CAFFARATTI',
-  'CONS. PROP EDIFICIO CITY OFFICE CENTER': 'ADM CAFFARATTI',
-  'EDIFICIO ALVEAR OFFICE': 'ADM CAFFARATTI',
-  'EDIFICIO RAICES II': 'ADM CAFFARATTI',
-  'EDIFICIO TORRE MARINA II': 'ADM CAFFARATTI',
-  'CONS. COPR. EDIFICIO RAICES I': 'ADM CAFFARATTI',
-  'CONS. COPR. EDIFICIO RAICES V': 'ADM CAFFARATTI',
-  'CONS. COPR. EDIFICIO YRIGOYEN OFFICE': 'ADM CAFFARATTI',
-  'CONS. DE PROP EDIF. RAICES IV': 'ADM CAFFARATTI',
-  'CONSORCIO COPROPIETARIO EDIFICIO COIHUE': 'ADM CAFFARATTI',
-  'TRASANDINA': 'ADM GONZALEZ',
-  'CONS. DE PROP ALTOS DE SANABRIA': 'ADM GONZALEZ',
-  'CONSORCIO DE PROP. EDIFICIO TORRE BRASIL': 'ADM GONZALEZ',
-  'EDIFICIO AGUSTINA': 'ADM GONZALEZ',
-  'VALTODANO': 'ADM GONZALEZ',
-  'EDIFICIO BUENOS AIRES 1246': 'ADM GONZALEZ',
-  'POETA LUGONES 38': 'ADM GONZALEZ',
-  'CENTAURO V': 'ADM HERNAN GATTI',
-  'ED. GENESIS': 'ADM HERNAN GATTI',
-  'ED. CENTAURO VI': 'ADM HERNAN GATTI',
-  'CONS. DE PROP. ED. INTERLAKEN II': 'ADM HERNAN GATTI',
-  'CONSORCIO DE PROP DEL ED CORAL PLAZA': 'ADM HERNAN GATTI',
-  'INTERLAKEN III - EVENTUAL': 'ADM HERNAN GATTI',
-  'EDIFICIO ESQUIU': 'ADM HERNAN GATTI',
-  'EDIFICIO SIVANA': 'ADM HERNAN GATTI',
-  'TORRE MARINA': 'ADM OLOCCO',
-  'CONS. DE COPROP. DEL EDIFICIO RAVENNA': 'ADM OLOCCO',
-  'CONSORCIO CHACABUCO 184': 'ADM OLOCCO',
-  'CONSORCIO DE PROPIETARIOS DEAN FUNES 250': 'ADM OLOCCO',
-  'EDIFICIO LOS NOGALES SRL': 'ADM OLOCCO',
-  'EDIFICIO AMANCAY I': 'ADM OLOCCO',
-  'CONSORCIO ED. ATTME': 'ADM OLOCCO',
-  'EDIFICIO FRAGUEIRO 343': 'ADM OLOCCO',
-  'SALVATICO I': 'ADM OLOCCO',
-  'EDIFICIO PARQUE': 'ADM OLOCCO',
-  'CONS. PROP ARTEGNA IV -EVENTUAL-': 'ADM RUFEIL',
-  'LUGONES 28': 'ADM RUFEIL',
-  'CONS PROPIETARIOS EDIF POETA LUGONES 34': 'ADM RUFEIL',
-  'CONSORCIO DE PROPIETARIOS DEL ED TAPIES': 'ADM RUFEIL',
-  'VERACRUZ - EVENTUAL-': 'ADM RUFEIL',
-  'EDIFICIO ALMAR- EVENTUAL-': 'ADM RUFEIL',
-  'PONTEVEDRA III EVENTUAL': 'ADM RUFEIL',
-  'EDIFICIO JR EVENTUAL': 'ADM RUFEIL',
-  'EDIFICIO DUARTE QUIROS 525': 'ADM RUFEIL',
-  'CONSORCIO DE PROP. EDIFICIO IRIS': 'ADM VIVIANA FERRERO',
-  'CONSORCIO GOPAR I': 'ADM VIVIANA FERRERO',
-  'CONSORCIO IRIGOYEN 131': 'ADM VIVIANA FERRERO',
-  'BALCARCE': 'ADM VIVIANA FERRERO',
-  'DESA II': 'ADM ZEBALLOS',
-  'DESA VII': 'ADM ZEBALLOS',
-  'ED. DESA III': 'ADM ZEBALLOS',
-  'ED. DESA IV': 'ADM ZEBALLOS',
-  'ED. 25 DE MAYO 1143': 'ADM ZEBALLOS',
-  'CONS. DE PROP. EDIFICIO AMBATO': 'ADM ZEBALLOS',
-  'EDIFICIO MADRYN': 'ADM COLOMER',
-  'EDIFICIO PATRIA': 'ADM COLOMER',
-  'EDIFICIO JACARANDA VI': 'ADM COLOMER',
-  'GRAU Y CERRITO': 'ADM DESTEFANIS',
-  'CANDONGA': 'ADM DESTEFANIS',
-  'CONSORCIO DE PROPIETARIOS INARCO VIII': 'ADM DESTEFANIS',
-  'CONSORCIO DE PROPIETARIOS INARCO XI': 'ADM DESTEFANIS',
-  '9 DE JULIO 649': 'ADM DESTEFANIS',
-  'CONSORCIO DE PROPIETARIOS MUÑECA HERMIDA': 'ADM DESTEFANIS',
-  'EDIFICIO OLIVA': 'ADM DESTEFANIS',
-  'ARTEMIS II': 'ADM ESTEBAN CASTAÑO',
-  'CONSORCIO EDIFICIO CASEROS 2940 ARTEMIS IV': 'ADM ESTEBAN CASTAÑO',
-  'CONSORCIO EDIFICIO ITUZAINGO 769': 'ADM ESTEBAN CASTAÑO',
-  'CONSORCIO FIDEICOMISO MAESTRO VIDAL': 'ADM ESTEBAN CASTAÑO',
-};
+// _mesData: { sup_user: { listado:[{clientId,clientName,clientAddr,done,doneDate,doneHour,recordId,score}] } }
+let _mesData = {};
 
-// ============================================================
-// STATE
-// ============================================================
-let currentUser = null;
-let allClients = [];
-let currentFilter = 'all';
-let judiciales = new Set([
-  'COWORKS S.A.S',
-  'COWORKER S.A.S.',
-  'LEONI NICOLAS FRANCISCO',
-  'SURCOR TV SA',
-  'SUR FINANZAS PSP SA',
-  'NOD LAB'
-]);
+let currentUser=null, currentClient=null, geoData=null, _fromListado=false;
 
-// ============================================================
-// PERSISTENCIA LOCAL
-// ============================================================
-function saveToStorage() {
-  try {
-    const fecha = new Date().toLocaleDateString('es-AR');
-    localStorage.setItem('megaclean_cobranzas_clients', JSON.stringify(allClients));
-    localStorage.setItem('megaclean_cobranzas_fecha', fecha);
-    localStorage.setItem('megaclean_judiciales', JSON.stringify([...judiciales]));
-  } catch(e) {}
-}
+// Firebase helpers
+async function fsAddRecord(r){if(!window._firebaseReady)return;const{collection,addDoc}=window._fsLib;return await addDoc(collection(window._db,'records'),r);}
+async function fsLoadRecords(){if(!window._firebaseReady)return[];const{collection,getDocs,query,orderBy}=window._fsLib;try{const s=await getDocs(query(collection(window._db,'records'),orderBy('date','desc')));return s.docs.map(d=>({...d.data(),_docId:d.id}));}catch(e){return[];}}
+async function fsDeleteRecord(id){if(!window._firebaseReady)return;const{doc,deleteDoc}=window._fsLib;await deleteDoc(doc(window._db,'records',id));}
+async function fsSaveClients(c){if(!window._firebaseReady)return;const{doc,setDoc}=window._fsLib;await setDoc(doc(window._db,'config','clients'),{list:c});}
+async function fsSaveSupervisors(list){if(!window._firebaseReady)return;const{doc,setDoc}=window._fsLib;await setDoc(doc(window._db,'config','supervisors'),{list:list.filter(s=>s.role!=='admin')});}
+async function fsSaveMes(mes,data){if(!window._firebaseReady)return;const{doc,setDoc}=window._fsLib;await setDoc(doc(window._db,'meses',mes),{data,mes});}
+async function fsLoadMes(mes){if(!window._firebaseReady)return null;const{doc,getDoc}=window._fsLib;try{const s=await getDoc(doc(window._db,'meses',mes));return s.exists()?s.data():null;}catch(e){return null;}}
 
-function loadFromStorage() {
-  try {
-    const savedJud = localStorage.getItem('megaclean_judiciales');
-    if (savedJud) judiciales = new Set(JSON.parse(savedJud));
-    const saved = localStorage.getItem('megaclean_cobranzas_clients');
-    const fecha = localStorage.getItem('megaclean_cobranzas_fecha') || '';
-    if (saved) {
-      const clients = JSON.parse(saved);
-      if (clients && clients.length > 0) {
-        // Restaurar fechas como objetos Date
-        clients.forEach(c => {
-          c.movimientos = c.movimientos.map(m => ({
-            ...m,
-            fechaEmision: m.fechaEmision ? new Date(m.fechaEmision) : null,
-            fechaVto: m.fechaVto ? new Date(m.fechaVto) : null,
-          }));
-          c.estado = calcularEstado(c);
-          c.diasVencido = calcularDiasVencido(c);
-        });
-        allClients = clients;
-        updateStats();
-        renderTable();
-        document.getElementById('import-status').textContent = `${clients.length} clientes · ${fecha} (guardado)`;
+function save(){try{localStorage.setItem('mc_unified',JSON.stringify({DB,_mesData}));}catch(e){}}
+function load(){try{const d=localStorage.getItem('mc_unified');if(d){const p=JSON.parse(d);if(p.DB)Object.assign(DB,p.DB);if(p._mesData)_mesData=p._mesData;}}catch(e){}}
+load();
+
+window.addEventListener('firebaseReady',function(){
+  const{doc,onSnapshot}=window._fsLib;
+  // Clientes en tiempo real
+  try{
+    onSnapshot(doc(window._db,'config','clients'),snap=>{
+      if(snap.exists()&&snap.data().list?.length){
+        DB.clients=snap.data().list;save();
+        if(document.getElementById('clientList'))renderClientList('');
+        refreshIfAdmin('tab-admin');
       }
-    }
-  } catch(e) {
-    console.warn('Error cargando datos guardados:', e);
-  }
-}
-
-// ============================================================
-// LOGIN
-// ============================================================
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim().toUpperCase();
-  const p = document.getElementById('login-pass').value;
-  if (USERS[u] && USERS[u].pass === p) {
-    currentUser = { ...USERS[u], username: u };
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('topbar-user').textContent = currentUser.nombre;
-    loadFromStorage();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-  }
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+    });
+  }catch(e){}
+  // Supervisores en tiempo real
+  try{
+    onSnapshot(doc(window._db,'config','supervisors'),snap=>{
+      if(snap.exists()&&snap.data().list?.length){
+        const admin={user:'admin',pass:'admin123',name:'Administrador',role:'admin'};
+        DB.supervisors=[admin,...snap.data().list.filter(s=>s.role!=='admin')];
+        save();
+        refreshIfAdmin('tab-admin');
+      }
+    });
+  }catch(e){}
+  // Mes actual en tiempo real
+  try{
+    onSnapshot(doc(window._db,'meses',DB.mesActual),snap=>{
+      if(snap.exists()&&snap.data().data){
+        _mesData[DB.mesActual]=snap.data().data;
+        save();
+        refreshListado();
+        refreshIfAdmin('tab-resumen');
+        refreshIfAdmin('tab-supervisores');
+      }
+    });
+  }catch(e){}
 });
 
-function doLogout() {
-  currentUser = null;
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
+function refreshIfAdmin(tabId){
+  if(!currentUser||currentUser.role!=='admin')return;
+  const active=document.querySelector('.tab-item.active')?.id;
+  if(active===tabId)switchTab(tabId.replace('tab-',''));
+}
+function refreshListado(){
+  if(!currentUser||currentUser.role==='admin')return;
+  const active=document.querySelector('.tab-item.active')?.id;
+  if(active==='tab-listado')renderListado(document.getElementById('mainContent'));
+}
+</script>
+
+<!-- ═══ AUTH + NAV ═══ -->
+<script>
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  const sup=DB.supervisors.find(s=>s.user===u&&s.pass===p);
+  if(sup){
+    currentUser=sup;
+    document.getElementById('loginScreen').classList.remove('active');
+    document.getElementById('appScreen').classList.add('active');
+    document.getElementById('headerName').textContent=sup.name;
+    document.getElementById('headerAvatar').textContent=sup.name[0];
+    document.getElementById('loginError').style.display='none';
+    buildTabBar();
+    // Cargar mes desde Firebase al entrar
+    fsLoadMes(DB.mesActual).then(d=>{if(d&&d.data){_mesData[DB.mesActual]=d.data;save();}switchTab(sup.role==='admin'?'resumen':'listado');});
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
 }
 
-// ============================================================
-// XLS IMPORT
-// ============================================================
-function handleFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', raw: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
-      processRows(rows, file.name);
-    } catch(err) {
-      console.error(err);
-      showToast('Error al leer el archivo. Verificá que sea el reporte de Skylab.');
+function buildTabBar(){
+  const bar=document.getElementById('tabBar');
+  if(currentUser.role==='admin'){
+    bar.innerHTML=`
+      <button class="tab-item" id="tab-resumen" onclick="switchTab('resumen')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Resumen
+      </button>
+      <button class="tab-item" id="tab-supervisores" onclick="switchTab('supervisores')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Supervisores
+      </button>
+      <button class="tab-item" id="tab-historial" onclick="switchTab('historial')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historial
+      </button>
+      <button class="tab-item" id="tab-admin" onclick="switchTab('admin')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>Admin
+      </button>`;
+  } else {
+    bar.innerHTML=`
+      <button class="tab-item" id="tab-listado" onclick="switchTab('listado')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Mi Listado
+      </button>
+      <button class="tab-item" id="tab-clientes" onclick="switchTab('clientes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M19 8v6m3-3h-6"/></svg>Todos
+      </button>
+      <button class="tab-item" id="tab-historial" onclick="switchTab('historial')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historial
+      </button>`;
+  }
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));
+  const tabEl=document.getElementById('tab-'+tab);
+  if(tabEl)tabEl.classList.add('active');
+  const c=document.getElementById('mainContent');
+  if(tab==='listado')renderListado(c);
+  else if(tab==='clientes')renderClients(c);
+  else if(tab==='historial')renderHistory(c);
+  else if(tab==='resumen')renderResumen(c);
+  else if(tab==='supervisores')renderSupervisores(c);
+  else if(tab==='admin')renderAdmin(c);
+}
+</script>
+
+<!-- ═══ LISTADO DEL MES (supervisor) ═══ -->
+<script>
+function getMiListado(){
+  const mes=DB.mesActual;
+  if(!_mesData[mes])return{listado:[],asignado:false};
+  const supData=_mesData[mes][currentUser.user];
+  if(!supData)return{listado:[],asignado:false};
+  return{listado:supData.listado||[],asignado:true};
+}
+
+function renderListado(c){
+  const mes=DB.mesActual;
+  const{listado,asignado}=getMiListado();
+  const done=listado.filter(x=>x.done).length;
+  const total=listado.length;
+  const pct=total?Math.round(done/total*100):0;
+
+  c.innerHTML=`
+    <div class="page-title">📋 Mi Listado — ${formatMes(mes)}</div>
+    <div class="page-sub">${asignado?done+' de '+total+' supervisados':'Sin listado asignado este mes'}</div>
+    ${asignado?`
+    <div class="card" style="margin-bottom:.8rem">
+      <div class="flex-between" style="margin-bottom:.5rem">
+        <span style="font-size:.8rem;font-weight:800;color:var(--text2)">AVANCE DEL MES</span>
+        <span style="font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--blue)">${pct}%</span>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:.4rem;font-size:.75rem;color:var(--text2);font-weight:700">
+        <span>✅ ${done} supervisados</span><span>⏳ ${total-done} pendientes</span>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar cliente..." oninput="filterListado(this.value)">
+    </div>
+    <div id="listadoList"></div>`:'<div class="empty"><div class="empty-icon">📋</div><p>El coordinador aún no cargó tu listado de este mes</p></div>'}`;
+  if(asignado)renderListadoItems(listado,'');
+}
+
+function filterListado(q){
+  const{listado}=getMiListado();
+  renderListadoItems(listado,q);
+}
+
+function renderListadoItems(listado,q){
+  const el=document.getElementById('listadoList');if(!el)return;
+  let items=listado;
+  if(q)items=items.filter(x=>x.clientName.toLowerCase().includes(q.toLowerCase())||x.clientAddr.toLowerCase().includes(q.toLowerCase()));
+  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><p>Sin resultados</p></div>';return;}
+  el.innerHTML=items.map(x=>`
+    <div class="client-item ${x.done?'done-item':''}" onclick="startFormFromListado('${x.clientId}','${x.clientName.replace(/'/g,'&#39;')}','${x.clientAddr.replace(/'/g,'&#39;')}')">
+      <div class="client-avatar" style="background:${x.done?'#5bb84a':'#0e8fd6'}">${x.clientName[0]}</div>
+      <div class="client-info">
+        <div class="client-name">${x.clientName}</div>
+        <div class="client-addr">📍 ${x.clientAddr}</div>
+        ${x.done?`<div class="client-status-badge" style="color:var(--green-dark)">✅ Supervisado · ${x.doneDate||''} ${x.doneHour||''}${x.score?' · '+x.score+'/100':''}</div>`:'<div class="client-status-badge" style="color:var(--warn)">⏳ Pendiente</div>'}
+      </div>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('');
+}
+
+function startFormFromListado(clientId,clientName,clientAddr){
+  // Buscar el cliente en DB o crear uno temporal
+  let cl=DB.clients.find(c=>c.id===clientId);
+  if(!cl)cl={id:clientId,name:clientName,address:clientAddr,color:'#0e8fd6'};
+  currentClient=cl;
+  geoData=null;
+  _fromListado=true;
+  renderForm(document.getElementById('mainContent'));
+}
+</script>
+
+<!-- ═══ CLIENTES (todos) ═══ -->
+<script>
+function renderClients(c){
+  c.innerHTML=`
+    <div class="page-title">🏢 Todos los Clientes</div>
+    <div class="page-sub">Podés supervisar cualquier cliente aunque no esté en tu listado</div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar cliente o dirección..." oninput="filterClients(this.value)">
+    </div>
+    <div id="clientList"></div>`;
+  renderClientList('');
+}
+function filterClients(q){renderClientList(q);}
+function renderClientList(q){
+  const el=document.getElementById('clientList');if(!el)return;
+  const mes=DB.mesActual;
+  // Obtener IDs del listado del supervisor
+  const miListado=(_mesData[mes]&&_mesData[mes][currentUser?.user])?(_mesData[mes][currentUser.user].listado||[]):[];
+  const enListado=new Set(miListado.map(x=>x.clientId));
+  const list=DB.clients.filter(c=>!q||c.name.toLowerCase().includes(q.toLowerCase())||c.address.toLowerCase().includes(q.toLowerCase()));
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏢</div><p>No se encontraron clientes</p></div>';return;}
+  el.innerHTML=list.map(c=>{
+    const isExtra=!enListado.has(c.id)&&currentUser?.role!=='admin';
+    return`<div class="client-item ${isExtra?'extra-item':''}" onclick="startFormFromAll('${c.id}')">
+      <div class="client-avatar" style="background:${c.color}">${c.name[0]}</div>
+      <div class="client-info">
+        <div class="client-name">${c.name}</div>
+        <div class="client-addr">📍 ${c.address}</div>
+        ${isExtra?'<div class="client-status-badge" style="color:var(--warn)">⚡ Extra — no está en tu listado del mes</div>':''}
+      </div>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+}
+function startFormFromAll(clientId){
+  currentClient=DB.clients.find(c=>c.id===clientId);
+  geoData=null;
+  _fromListado=false;
+  renderForm(document.getElementById('mainContent'));
+}
+</script>
+
+<!-- ═══ FORMULARIO F013 ═══ -->
+<script>
+function renderForm(c){
+  const backTab=_fromListado?'listado':'clientes';
+  c.innerHTML=`
+    <button onclick="switchTab('${backTab}')" style="background:none;border:none;cursor:pointer;color:var(--text2);display:inline-flex;align-items:center;gap:.3rem;font-family:inherit;font-size:.88rem;font-weight:700;padding:0;margin-bottom:1rem">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Volver</button>
+    ${_fromListado?'':'<div style="background:rgba(224,140,10,.1);border:1.5px solid var(--warn);border-radius:var(--radius-sm);padding:.6rem 1rem;margin-bottom:.8rem;font-size:.82rem;font-weight:700;color:var(--warn)">⚡ Cliente fuera de tu listado del mes — quedará registrado como supervisión extra</div>'}
+    <div class="card" style="border-left:4px solid var(--blue);margin-bottom:.8rem">
+      <div style="font-weight:900;font-size:1.05rem;margin-bottom:.2rem;color:var(--blue-dark)">${currentClient.name}</div>
+      <div style="font-size:.83rem;color:var(--text2);font-weight:600">📍 ${currentClient.address}</div>
+      <div class="divider"></div>
+      <div class="flex-between">
+        <div><div style="font-size:.7rem;color:var(--text2);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">SUPERVISOR</div><div style="font-size:.9rem;font-weight:700">${currentUser.name}</div></div>
+        <div style="text-align:right"><div style="font-size:.7rem;color:var(--text2);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem">FECHA</div><div style="font-size:.9rem;font-family:'DM Mono',monospace">${new Date().toLocaleDateString('es-AR')}</div></div>
+      </div>
+    </div>
+    <div id="geoBadge" class="geo-badge" onclick="captureGeo()"><span class="geo-dot pulse"></span><span id="geoText">Verificar ubicación (requerido)</span></div>
+    <div class="score-bar">
+      <div class="flex-between">
+        <div><div class="score-number" id="scoreNum">0</div><div class="score-label">/ 100 puntos · F013</div></div>
+        <div id="scoreTag" class="tag tag-m" style="font-size:.9rem;padding:.3rem .8rem">M</div>
+      </div>
+      <div class="score-progress"><div class="score-fill" id="scoreFill" style="width:0%;background:var(--danger)"></div></div>
+    </div>
+    <div class="card"><div class="card-title">👷 Datos del operario</div><input type="text" id="fOperario" class="inline-input" placeholder="Nombre completo del operario..." oninput="updateScore()"></div>
+    ${buildSection(1,'Puntualidad y Asistencia','5',renderSec1())}
+    ${buildSection(2,'Presentación y Actitud','15',renderSec2())}
+    ${buildSection(3,'Conocimiento y Procedimientos','10',renderSec3())}
+    ${buildSection(4,'Desempeño de Limpieza','50',renderSec4())}
+    ${buildSection(5,'Materiales y Productos','15',renderSec5())}
+    ${buildSection(6,'Calificación del Evaluador','5',renderSec6())}
+    <div style="margin-top:1rem"><button class="btn green" onclick="submitForm()">✓ Guardar Control de Calidad</button><div id="submitError" style="color:var(--danger);font-size:.83rem;margin-top:.5rem;text-align:center;display:none;font-weight:700"></div></div>`;
+  document.querySelectorAll('.form-section-header').forEach(h=>h.addEventListener('click',()=>h.nextElementSibling.classList.toggle('open')));
+  document.querySelector('.form-section .form-section-body')?.classList.add('open');
+  updateScore();
+}
+
+function buildSection(num,title,pts,inner){return`<div class="form-section"><div class="form-section-header"><span class="section-title"><span class="section-badge">${num}</span>${title}</span><span class="section-pts" id="pts${num}">0/${pts} pts</span></div><div class="form-section-body">${inner}</div></div>`;}
+function rb(name,value,labelText,cls){const id=name+'_'+value;return`<div class="radio-opt"><input type="radio" name="${name}" id="${id}" value="${value}" onchange="updateScore()"><label for="${id}" class="${cls}">${labelText}</label></div>`;}
+function mbRow(id,label,withNA=false){const na=withNA?rb(id,'na','NA','na'):'';return`<div class="form-row"><div class="form-row-label">${label}</div><div class="radio-group">${rb(id,'mb','MB','mb')}${rb(id,'b','B','b')}${rb(id,'r','R','r')}${rb(id,'m','M','m')}${na}</div><div class="form-row-obs"><input type="text" placeholder="Observaciones..."></div></div>`;}
+function renderSec1(){return`<p style="font-size:.78rem;color:var(--text2);font-weight:700;margin-bottom:.8rem">Solo un ítem por control.</p>`+[{id:'p_ingreso',label:'Ingreso en horario'},{id:'p_egreso',label:'Egreso en horario'},{id:'p_permanencia',label:'Permanencia durante la jornada'},{id:'p_planilla',label:'Planilla completa y firmada'}].map(it=>`<div class="form-row"><div class="form-row-label">${it.label}</div><div class="radio-group">${rb(it.id,'cumple','Cumple','cumple')}${rb(it.id,'nocumple','No cumple','nocumple')}${rb(it.id,'na','NA','na')}</div><div class="form-row-obs"><input type="text" placeholder="Observaciones..."></div></div>`).join('');}
+function renderSec2(){return[{id:'pre_personal',label:'Presencia personal'},{id:'pre_uniforme',label:'Uso correcto del uniforme'},{id:'pre_actitud',label:'Respeto y actitud en el servicio'}].map(it=>mbRow(it.id,it.label)).join('');}
+function renderSec3(){return[{id:'con_plan',label:'Conocimiento del plan de trabajo'},{id:'con_metodo',label:'Aplicación de método de limpieza'}].map(it=>mbRow(it.id,it.label)).join('');}
+function renderSec4(){return`<p style="font-size:.78rem;color:var(--text2);font-weight:700;margin-bottom:.8rem">NA suma 5 puntos.</p>`+[{id:'a_pisos',label:'Pisos y zócalos'},{id:'a_vereda',label:'Vereda'},{id:'a_vidrios',label:'Aberturas y vidrios'},{id:'a_banos',label:'Baños'},{id:'a_cocina',label:'Cocina'},{id:'a_ascensores',label:'Ascensores'},{id:'a_aranas',label:'Telas de araña'},{id:'a_muebles',label:'Muebles y elementos menores'},{id:'a_escaleras',label:'Escaleras y barandas'},{id:'a_tecnicos',label:'Espacios técnicos'}].map(it=>mbRow(it.id,it.label,true)).join('');}
+function renderSec5(){return`<p style="font-size:.78rem;color:var(--text2);font-weight:700;margin-bottom:.8rem">NA suma 5 puntos.</p>`+[{id:'m_stock',label:'Nivel de stock adecuado'},{id:'m_envases',label:'Uso correcto de envases y dilución'},{id:'m_maquinas',label:'Estado de máquinas y herramientas'}].map(it=>mbRow(it.id,it.label,true)).join('');}
+function renderSec6(){return`<div class="form-row"><div class="form-row-label">¿Cliente presente?</div><div class="radio-group">${rb('cliente_presente','si','Sí','cumple')}${rb('cliente_presente','no','No','nocumple')}</div></div><div class="form-row"><div class="form-row-label">Opinión general</div><div class="radio-group">${rb('opinion_general','mb','MB','mb')}${rb('opinion_general','b','B','b')}${rb('opinion_general','r','R','r')}${rb('opinion_general','m','M','m')}</div></div><div class="form-row"><div class="form-row-label">Comentarios</div><div class="form-row-obs"><input type="text" id="fComentarios" placeholder="Observaciones generales..."></div></div>`;}
+function getR(name){const el=document.querySelector('input[name="'+name+'"]:checked');return el?el.value:null;}
+function mbPts(v){return{mb:5,b:3,r:1,m:0,na:5}[v]??0;}
+
+function updateScore(){
+  const pItems=['p_ingreso','p_egreso','p_permanencia','p_planilla'];
+  let s1=0;for(const p of pItems){if(getR(p)==='cumple'){s1=5;break;}}
+  const s2=Math.min(['pre_personal','pre_uniforme','pre_actitud'].reduce((a,i)=>a+mbPts(getR(i)),0),15);
+  const s3=Math.min(['con_plan','con_metodo'].reduce((a,i)=>a+mbPts(getR(i)),0),10);
+  const s4=Math.min(['a_pisos','a_vereda','a_vidrios','a_banos','a_cocina','a_ascensores','a_aranas','a_muebles','a_escaleras','a_tecnicos'].reduce((a,i)=>a+mbPts(getR(i)),0),50);
+  const s5=Math.min(['m_stock','m_envases','m_maquinas'].reduce((a,i)=>a+mbPts(getR(i)),0),15);
+  const og=getR('opinion_general');const s6={mb:5,b:3,r:1,m:0}[og]??0;
+  const total=s1+s2+s3+s4+s5+s6;
+  const q=total>=90?'MB':total>=74?'B':total>=65?'R':'M';
+  const colors={MB:'var(--green)',B:'var(--blue)',R:'var(--warn)',M:'var(--danger)'};
+  const tagClass={MB:'tag-mb',B:'tag-b',R:'tag-r',M:'tag-m'};
+  const sn=document.getElementById('scoreNum');if(sn)sn.textContent=total;
+  const st=document.getElementById('scoreTag');if(st){st.textContent=q;st.className='tag '+tagClass[q];}
+  const sf=document.getElementById('scoreFill');if(sf){sf.style.width=total+'%';sf.style.background=colors[q];}
+  ['1','2','3','4','5','6'].forEach((n,i)=>{const pts=[s1,s2,s3,s4,s5,s6][i];const max=[5,15,10,50,15,5][i];const el=document.getElementById('pts'+n);if(el)el.textContent=pts+'/'+max+' pts';});
+  return{s1,s2,s3,s4,s5,s6,total,q};
+}
+</script>
+
+<!-- ═══ GEO ═══ -->
+<script>
+function captureGeo(){
+  if(!navigator.geolocation){showToast('Geolocalización no disponible');return;}
+  const badge=document.getElementById('geoBadge'),text=document.getElementById('geoText');
+  badge.className='geo-badge';badge.style.opacity='.6';
+  text.textContent='Obteniendo ubicación...';
+  navigator.geolocation.getCurrentPosition(
+    function(pos){
+      const lat=pos.coords.latitude,lng=pos.coords.longitude,acc=Math.round(pos.coords.accuracy);
+      geoData={lat,lng,accuracy:acc,ts:new Date().toISOString(),locationMatch:null,distanceM:null};
+      badge.style.opacity='1';
+      text.textContent='Ubicación obtenida · Verificando dirección...';
+      badge.classList.add('confirmed');
+      showToast('Ubicación obtenida ✓');
+      geocodeAndCompare(lat,lng,acc,badge,text);
+    },
+    function(err){
+      badge.classList.add('failed');badge.style.opacity='1';
+      text.textContent='✗ No se pudo obtener la ubicación';
+      showToast('Error de geolocalización');
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+function geocodeAndCompare(lat,lng,acc,badge,text){
+  const addr=encodeURIComponent(currentClient.address+', Córdoba, Argentina');
+  fetch('https://nominatim.openstreetmap.org/search?q='+addr+'&format=json&limit=1',{headers:{'Accept-Language':'es'}})
+    .then(function(res){return res.json();})
+    .then(function(data){
+      if(data&&data.length>0){
+        const clLat=parseFloat(data[0].lat),clLng=parseFloat(data[0].lon);
+        const distM=Math.round(calcDistance(lat,lng,clLat,clLng));
+        geoData.distanceM=distM;geoData.clientCoords={lat:clLat,lng:clLng};geoData.verified=true;
+        if(distM<=100){
+          geoData.locationMatch=true;
+          badge.className='geo-badge confirmed';
+          text.textContent='✅ En el lugar · '+distM+'m del cliente (±'+acc+'m GPS)';
+          showToast('Ubicación verificada ✓');
+        } else {
+          geoData.locationMatch=false;
+          badge.className='geo-badge failed';
+          text.textContent='⚠️ Fuera de ubicación · '+distM+'m del cliente (±'+acc+'m GPS)';
+          showToast('⚠️ Ubicación no coincide con el cliente');
+        }
+      } else {
+        geoData.locationMatch=null;
+        text.textContent='📍 GPS obtenido (±'+acc+'m) · Dirección no verificable';
+      }
+    })
+    .catch(function(){
+      geoData.locationMatch=null;
+      text.textContent='📍 GPS: '+lat.toFixed(5)+', '+lng.toFixed(5)+' (±'+acc+'m)';
+    });
+}
+
+function calcDistance(lat1,lon1,lat2,lon2){
+  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+</script>
+
+<!-- ═══ SUBMIT + FIRMA + PDF ═══ -->
+<script>
+function submitForm(){
+  const errEl=document.getElementById('submitError');
+  const operario=document.getElementById('fOperario')?.value?.trim();
+  if(!operario){errEl.style.display='block';errEl.textContent='⚠️ Ingresá el nombre del operario.';return;}
+  // Si no hay geoData, permitir continuar con advertencia
+  if(!geoData){
+    if(!confirm('⚠️ No verificaste la ubicación GPS.\n\nEl coordinador verá que este control se guardó SIN verificación de ubicación.\n\n¿Querés continuar de todas formas?'))return;
+    geoData={lat:null,lng:null,accuracy:null,ts:new Date().toISOString(),locationMatch:null,distanceM:null,sinGPS:true};
+  }
+  errEl.style.display='none';
+  const fields=['p_ingreso','p_egreso','p_permanencia','p_planilla','pre_personal','pre_uniforme','pre_actitud','con_plan','con_metodo','a_pisos','a_vereda','a_vidrios','a_banos','a_cocina','a_ascensores','a_aranas','a_muebles','a_escaleras','a_tecnicos','m_stock','m_envases','m_maquinas','cliente_presente','opinion_general'];
+  const values={};fields.forEach(f=>values[f]=getR(f));
+  const{s1,s2,s3,s4,s5,s6,total,q}=updateScore();
+  const record={id:'r'+Date.now(),clientId:currentClient.id,clientName:currentClient.name,clientAddr:currentClient.address,supervisorName:currentUser.name,supervisorUser:currentUser.user,operario,date:new Date().toISOString(),geo:geoData,values,scores:{s1,s2,s3,s4,s5,s6,total},qual:q,comentarios:document.getElementById('fComentarios')?.value||'',esExtra:!_fromListado};
+  showSignatureScreen(record);
+}
+
+let _pendingRecord=null;
+
+function showSignatureScreen(record){
+  _pendingRecord=record;
+  const{s1,s2,s3,s4,s5,s6,total}=record.scores;
+  document.getElementById('modalBody').innerHTML=`
+    <h3>✅ Control completado</h3>
+    <div style="background:var(--bg);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;">
+      <div style="font-weight:800;font-size:1rem;color:var(--blue-dark);margin-bottom:.3rem">${record.clientName}</div>
+      <div style="font-size:.82rem;color:var(--text2);margin-bottom:.7rem">📍 ${record.clientAddr}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem;margin-bottom:.5rem">
+        ${[['Puntualidad',s1,5],['Presentación',s2,15],['Conocimiento',s3,10],['Desempeño',s4,50],['Materiales',s5,15],['Evaluación',s6,5]].map(function(x){return'<div style="background:white;border-radius:7px;padding:.5rem;text-align:center;border:1px solid var(--border)"><div style="font-size:.6rem;color:var(--text2);font-weight:800">'+x[0]+'</div><div style="font-family:\'DM Mono\',monospace;font-size:.9rem;font-weight:600;color:var(--blue-dark)">'+x[1]+'/'+x[2]+'</div></div>';}).join('')}
+      </div>
+      <div style="text-align:center;font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:600;color:var(--blue-dark)">${total}<span style="font-size:.9rem;color:var(--text2)">/100</span> <span class="tag tag-${record.qual.toLowerCase()}" style="font-size:.9rem">${record.qual}</span></div>
+    </div>
+    <div style="font-size:.82rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem">✍️ Firma del operario: ${record.operario}</div>
+    <canvas id="sigCanvas" class="signature-canvas" height="140"></canvas>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem;margin-bottom:1rem">
+      <button class="btn sm secondary" onclick="clearSignature()">🗑 Borrar firma</button>
+    </div>
+    <div style="display:flex;gap:.6rem;">
+      <button class="btn green" style="flex:1" onclick="saveWithSignature()">💾 Guardar y generar PDF</button>
+      <button class="btn sm secondary" onclick="saveWithoutSignature()">Guardar sin firma</button>
+    </div>`;
+  openModal();
+  initSignatureCanvas();
+}
+
+let sigDrawing=false,sigCtx=null,sigCanvas=null;
+function initSignatureCanvas(){
+  sigCanvas=document.getElementById('sigCanvas');if(!sigCanvas)return;
+  sigCanvas.width=sigCanvas.offsetWidth||340;
+  sigCtx=sigCanvas.getContext('2d');
+  sigCtx.strokeStyle='#0d2d42';sigCtx.lineWidth=2.5;sigCtx.lineCap='round';sigCtx.lineJoin='round';
+  const pos=function(e){const r=sigCanvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(sigCanvas.width/r.width),y:(src.clientY-r.top)*(sigCanvas.height/r.height)};};
+  sigCanvas.addEventListener('mousedown',function(e){sigDrawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});
+  sigCanvas.addEventListener('mousemove',function(e){if(!sigDrawing)return;const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();});
+  sigCanvas.addEventListener('mouseup',function(){sigDrawing=false;sigCanvas.classList.add('signed');});
+  sigCanvas.addEventListener('touchstart',function(e){e.preventDefault();sigDrawing=true;const p=pos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);},{passive:false});
+  sigCanvas.addEventListener('touchmove',function(e){e.preventDefault();if(!sigDrawing)return;const p=pos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();},{passive:false});
+  sigCanvas.addEventListener('touchend',function(){sigDrawing=false;sigCanvas.classList.add('signed');});
+}
+function clearSignature(){if(sigCtx&&sigCanvas){sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);sigCanvas.classList.remove('signed');}}
+function isCanvasEmpty(){if(!sigCanvas)return true;const d=sigCtx.getImageData(0,0,sigCanvas.width,sigCanvas.height).data;return!d.some(function(x){return x!==0;});}
+
+function saveRecord(record,sigDataUrl){
+  if(sigDataUrl)record.signature=sigDataUrl;
+  DB.records.push(record);save();
+  fsAddRecord(record)
+    .then(function(){showToast('✅ Control guardado en la nube');})
+    .catch(function(){
+      // Sin internet — aviso bien visible
+      showToastSinInternet();
+    });
+  if(_fromListado){marcarEnListado(record);}
+  closeModal();
+}
+
+function showToastSinInternet(){
+  const t=document.getElementById('toast');
+  t.textContent='⚠️ Sin internet — guardado solo en este celular. Abrí la app con conexión para sincronizar.';
+  t.style.background='var(--danger)';
+  t.style.whiteSpace='normal';
+  t.style.maxWidth='90vw';
+  t.style.textAlign='center';
+  t.classList.add('show');
+  setTimeout(function(){
+    t.classList.remove('show');
+    t.style.background='';
+    t.style.whiteSpace='';
+    t.style.maxWidth='';
+  },6000);
+}
+
+function marcarEnListado(record){
+  const mes=DB.mesActual;
+  if(!_mesData[mes])_mesData[mes]={};
+  const supUser=record.supervisorUser;
+  if(!_mesData[mes][supUser])return; // no tiene listado asignado
+  const listado=_mesData[mes][supUser].listado||[];
+  const idx=listado.findIndex(function(x){return x.clientId===record.clientId;});
+  if(idx>=0){
+    const now=new Date();
+    listado[idx].done=true;
+    listado[idx].doneDate=now.toLocaleDateString('es-AR');
+    listado[idx].doneHour=now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    listado[idx].recordId=record.id;
+    listado[idx].score=record.scores.total;
+    listado[idx].qual=record.qual;
+    listado[idx].locationMatch=record.geo?.locationMatch??null;
+    _mesData[mes][supUser].listado=listado;
+    save();
+    fsSaveMes(mes,_mesData[mes]).catch(function(){});
+  }
+}
+
+function saveWithoutSignature(){
+  if(!_pendingRecord)return;
+  saveRecord(_pendingRecord,null);
+  _pendingRecord=null;
+  switchTab(_fromListado?'listado':'historial');
+}
+
+function saveWithSignature(){
+  if(!_pendingRecord)return;
+  const sigDataUrl=isCanvasEmpty()?null:sigCanvas.toDataURL('image/png');
+  saveRecord(_pendingRecord,sigDataUrl);
+  generatePDF(_pendingRecord,sigDataUrl);
+  _pendingRecord=null;
+}
+</script>
+
+<!-- ═══ PDF ═══ -->
+<script>
+function generatePDF(record,sigDataUrl){
+  if(!window.jspdf||!window.jspdf.jsPDF){showToast('Error: librería PDF no cargó.');return;}
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,ml=15,mr=15,cw=W-ml-mr;let y=15;
+  doc.setFillColor(10,111,168);doc.rect(0,0,W,28,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text('MegaClean',ml,12);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text('Sabemos de Limpieza',ml,18);
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text('CONTROL DE CALIDAD F013',W-mr,12,{align:'right'});
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text(new Date(record.date).toLocaleString('es-AR'),W-mr,18,{align:'right'});
+  y=36;
+  doc.setFillColor(240,246,251);doc.rect(ml,y,cw,20,'F');doc.setDrawColor(205,227,240);doc.rect(ml,y,cw,20,'S');
+  doc.setTextColor(10,111,168);doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(record.clientName,ml+4,y+8);
+  doc.setTextColor(74,122,153);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(record.clientAddr,ml+4,y+15);y+=26;
+  doc.setFillColor(255,255,255);doc.setDrawColor(205,227,240);
+  doc.rect(ml,y,cw/2-2,14,'FD');doc.rect(ml+cw/2+2,y,cw/2-2,14,'FD');
+  doc.setTextColor(74,122,153);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text('OPERARIO',ml+4,y+5);doc.text('SUPERVISOR',ml+cw/2+6,y+5);
+  doc.setTextColor(13,45,66);doc.setFontSize(10);doc.setFont('helvetica','bold');
+  doc.text(record.operario,ml+4,y+11);doc.text(record.supervisorName,ml+cw/2+6,y+11);y+=20;
+  const qualColors={MB:[91,184,74],B:[14,143,214],R:[224,140,10],M:[224,62,62]};
+  const qc=qualColors[record.qual]||[14,143,214];
+  doc.setFillColor(qc[0],qc[1],qc[2]);doc.rect(ml,y,cw,16,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text('PUNTAJE TOTAL: '+record.scores.total+'/100 — '+record.qual,W/2,y+10,{align:'center'});y+=22;
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(74,122,153);doc.text('DETALLE POR SECCION',ml,y);y+=4;
+  const secs=[['Puntualidad',record.scores.s1,5],['Presentacion',record.scores.s2,15],['Conocimiento',record.scores.s3,10],['Desempeno',record.scores.s4,50],['Materiales',record.scores.s5,15],['Evaluacion Final',record.scores.s6,5]];
+  const colW=cw/3;
+  secs.forEach(function(s,i){
+    const cx=ml+(i%3)*colW;const cy=y+Math.floor(i/3)*12;
+    const fc=i%2===0?[248,252,255]:[240,246,251];
+    doc.setFillColor(fc[0],fc[1],fc[2]);doc.rect(cx,cy,colW-1,11,'F');
+    doc.setDrawColor(205,227,240);doc.rect(cx,cy,colW-1,11,'S');
+    doc.setTextColor(74,122,153);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text(s[0].toUpperCase(),cx+3,cy+5);
+    doc.setTextColor(10,111,168);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(s[1]+'/'+s[2],cx+3,cy+10);
+  });y+=30;
+  if(record.comentarios){
+    doc.setFillColor(255,250,230);doc.setDrawColor(224,140,10);doc.rect(ml,y,cw,14,'FD');
+    doc.setTextColor(74,122,153);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('OBSERVACIONES',ml+3,y+5);
+    doc.setTextColor(13,45,66);doc.setFontSize(9);doc.setFont('helvetica','normal');
+    const lines=doc.splitTextToSize(record.comentarios,cw-6);doc.text(lines,ml+3,y+10);
+    y+=16+Math.max(0,(lines.length-1)*4);
+  }y+=4;
+  if(record.geo){
+    const lm=record.geo.locationMatch;
+    const bgC=lm===true?[232,248,228]:lm===false?[254,235,235]:[240,246,251];
+    const bdC=lm===true?[91,184,74]:lm===false?[224,62,62]:[14,143,214];
+    const txt=lm===true?'SUPERVISION VERIFICADA EN EL LUGAR · '+record.geo.distanceM+'m del cliente':lm===false?'FUERA DE UBICACION · El supervisor estaba a '+record.geo.distanceM+'m del cliente':'GPS registrado: '+record.geo.lat.toFixed(5)+', '+record.geo.lng.toFixed(5)+' (+/-'+record.geo.accuracy+'m)';
+    doc.setFillColor(bgC[0],bgC[1],bgC[2]);doc.setDrawColor(bdC[0],bdC[1],bdC[2]);doc.rect(ml,y,cw,lm===false?16:12,'FD');
+    doc.setTextColor(bdC[0],bdC[1],bdC[2]);doc.setFontSize(lm===false?8:7.5);doc.setFont('helvetica','bold');
+    const glines=doc.splitTextToSize(txt,cw-6);doc.text(glines,ml+3,y+6);
+    y+=lm===false?20:16;
+  }y+=4;
+  doc.setDrawColor(205,227,240);doc.setFillColor(248,252,255);doc.rect(ml,y,cw,36,'FD');
+  doc.setTextColor(74,122,153);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('FIRMA DEL OPERARIO: '+record.operario.toUpperCase(),ml+3,y+5);
+  if(sigDataUrl){try{doc.addImage(sigDataUrl,'PNG',ml+4,y+7,80,26);}catch(e){}}
+  else{doc.setTextColor(180,200,215);doc.setFontSize(9);doc.text('Sin firma registrada',ml+cw/2,y+20,{align:'center'});}
+  y+=42;
+  doc.setFillColor(10,111,168);doc.rect(0,287,W,10,'F');
+  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','normal');
+  doc.text('MegaClean - Sabemos de Limpieza - Control de Calidad F013',W/2,293,{align:'center'});
+  const fname='F013_'+record.clientName.replace(/\s+/g,'_')+'_'+new Date(record.date).toLocaleDateString('es-AR').replace(/\//g,'-')+'.pdf';
+  if(navigator.share&&navigator.canShare){
+    const blob=doc.output('blob');
+    const file=new File([blob],fname,{type:'application/pdf'});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({title:'Control F013 - '+record.clientName,text:'Control MegaClean\nCliente: '+record.clientName+'\nFecha: '+new Date(record.date).toLocaleString('es-AR')+'\nPuntaje: '+record.scores.total+'/100 ('+record.qual+')',files:[file]}).then(function(){showToast('PDF compartido');}).catch(function(){doc.save(fname);});
+      return;
     }
+  }
+  doc.save(fname);showToast('PDF descargado');
+}
+</script>
+
+<!-- ═══ HISTORIAL ═══ -->
+<script>
+let _allHistRecords=[], _histFilter={sup:'todos',q:'',extra:'todos'};
+
+async function renderHistory(c){
+  c.innerHTML='<div class="page-title">Historial de Controles</div><div id="histFilters"></div><div class="page-sub" id="histSub">Cargando...</div><div id="histList"><div class="empty"><div class="empty-icon">⏳</div><p>Conectando...</p></div></div>';
+  const records=await fsLoadRecords().catch(function(){return[];});
+  const all=records.length?records:DB.records.slice().reverse();
+  _allHistRecords=currentUser.role==='admin'?all:all.filter(function(r){return r.supervisorUser===currentUser.user;});
+  _histFilter={sup:'todos',q:'',extra:'todos'};
+  if(currentUser.role==='admin') renderHistFilters();
+  applyHistFilter();
+}
+
+function renderHistFilters(){
+  const el=document.getElementById('histFilters');if(!el)return;
+  const sups=DB.supervisors.filter(function(s){return s.role!=='admin';});
+  el.innerHTML=`
+    <div style="margin-bottom:.8rem">
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="hist-chip active" id="chip-todos" onclick="setHistSupFilter('todos',this)">Todos</button>
+        ${sups.map(function(s){return'<button class="hist-chip" id="chip-'+s.user+'" onclick="setHistSupFilter(\''+s.user+'\',this)">'+s.name+'</button>';}).join('')}
+      </div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem">
+        <button class="hist-chip-sm active" id="chip-extra-todos" onclick="setHistExtraFilter('todos',this)">Todos</button>
+        <button class="hist-chip-sm" id="chip-extra-no" onclick="setHistExtraFilter('no',this)">Solo listado</button>
+        <button class="hist-chip-sm" id="chip-extra-si" onclick="setHistExtraFilter('si',this)">⚡ Solo extras</button>
+        <button class="hist-chip-sm" id="chip-extra-fuera" onclick="setHistExtraFilter('fuera',this)">⚠️ Fuera de ubicación</button>
+        <button class="hist-chip-sm" id="chip-extra-alerta" onclick="setHistExtraFilter('alerta',this)" style="border-color:var(--danger);color:var(--danger)">🔴 Con alerta</button>
+      </div>
+      <div class="search-wrap" style="margin-bottom:0">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar cliente u operario..." oninput="setHistSearch(this.value)">
+      </div>
+    </div>`;
+}
+
+function setHistSupFilter(val,btn){
+  _histFilter.sup=val;
+  document.querySelectorAll('.hist-chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  applyHistFilter();
+}
+function setHistExtraFilter(val,btn){
+  _histFilter.extra=val;
+  document.querySelectorAll('.hist-chip-sm').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  applyHistFilter();
+}
+function setHistSearch(val){
+  _histFilter.q=val;
+  applyHistFilter();
+}
+
+function applyHistFilter(){
+  let filtered=_allHistRecords;
+  if(_histFilter.sup!=='todos') filtered=filtered.filter(function(r){return r.supervisorUser===_histFilter.sup;});
+  if(_histFilter.extra==='no') filtered=filtered.filter(function(r){return !r.esExtra;});
+  if(_histFilter.extra==='si') filtered=filtered.filter(function(r){return r.esExtra;});
+  if(_histFilter.extra==='fuera') filtered=filtered.filter(function(r){return r.geo?.locationMatch===false;});
+  if(_histFilter.extra==='alerta') filtered=filtered.filter(function(r){return r.scores.total<=73;});
+  if(_histFilter.q) filtered=filtered.filter(function(r){const q=_histFilter.q.toLowerCase();return r.clientName.toLowerCase().includes(q)||r.operario.toLowerCase().includes(q)||r.supervisorName.toLowerCase().includes(q);});
+  window._histRecords=filtered;
+  const sub=document.getElementById('histSub');const list=document.getElementById('histList');
+  if(sub)sub.textContent=filtered.length+' control'+(filtered.length!==1?'es':'')+' encontrado'+(filtered.length!==1?'s':'');
+  if(!list)return;
+  if(!filtered.length){list.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><p>Sin resultados</p></div>';return;}
+  list.innerHTML=filtered.map(function(r,idx){
+    const esAlerta=r.scores.total<=73;
+    const locBadge=r.geo?.sinGPS?'<div style="font-size:.75rem;color:var(--text2);font-weight:800;margin-top:.3rem">📵 Sin verificación GPS</div>':r.geo?.locationMatch===false?'<div style="font-size:.75rem;color:var(--danger);font-weight:800;margin-top:.3rem">⚠️ Fuera de ubicación · '+r.geo.distanceM+'m</div>':r.geo?.locationMatch===true?'<div style="font-size:.75rem;color:var(--green-dark);font-weight:700;margin-top:.3rem">✅ En el lugar · '+r.geo.distanceM+'m</div>':'';
+    const extraBadge=r.esExtra?'<span style="font-size:.7rem;background:rgba(224,140,10,.12);color:var(--warn);padding:.1rem .5rem;border-radius:10px;font-weight:800;margin-left:.4rem">Extra</span>':'';
+    const alertaBadge=esAlerta?'<div class="alerta-badge">🔴 Requiere seguimiento — puntaje '+r.scores.total+'/100</div>':'';
+    const tagClass=esAlerta?'tag-m':(r.scores.total>=90?'tag-mb':'tag-b');
+    return'<div class="hist-item'+(esAlerta?' alerta':'')+'" onclick="showRecord('+idx+')"><div class="hist-top"><div class="hist-name">'+r.clientName+extraBadge+'</div><span class="tag '+tagClass+'">'+(esAlerta?'🔴 ':'')+r.scores.total+'/100</span></div><div class="hist-meta">👷 '+r.operario+' · 👤 '+r.supervisorName+'</div>'+alertaBadge+locBadge+'<div style="font-size:.73rem;color:var(--text3);margin-top:.22rem;font-family:\'DM Mono\',monospace">'+new Date(r.date).toLocaleString('es-AR')+'</div></div>';
+  }).join('')+'<div class="mt"><button class="btn" onclick="exportFilteredExcel()">↓ Exportar filtrado a Excel</button></div>';
+}
+
+function exportFilteredExcel(){
+  const mine=window._histRecords||[];
+  if(!mine.length){showToast('No hay controles para exportar');return;}
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mine.map(toRow)),'Controles');
+  XLSX.writeFile(wb,'MegaClean_Controles_'+new Date().toLocaleDateString('es-AR').replace(/\//g,'-')+'.xlsx');
+  showToast('Excel exportado ✓');
+}
+
+async function showRecord(idx){
+  const r=window._histRecords?window._histRecords[idx]:null;if(!r)return;
+  window._currentRecord=r;
+  document.getElementById('modalBody').innerHTML=`
+    <h3>${r.clientName}${r.esExtra?'<span style="font-size:.7rem;background:rgba(224,140,10,.12);color:var(--warn);padding:.15rem .5rem;border-radius:10px;font-weight:800;margin-left:.5rem">Extra</span>':''}</h3>
+    <div style="font-size:.83rem;color:var(--text2);font-weight:600;margin-bottom:1rem">📍 ${r.clientAddr}</div>
+    <div class="flex-between" style="margin-bottom:1rem">
+      <div><div style="font-size:.7rem;color:var(--text2);font-weight:800">TOTAL</div><div style="font-family:'DM Mono',monospace;font-size:2.2rem;font-weight:500;color:var(--blue-dark)">${r.scores.total}<span style="font-size:1rem;color:var(--text2)">/100</span></div></div>
+      <span class="tag tag-${r.qual.toLowerCase()}" style="font-size:1rem;padding:.35rem .85rem">${r.qual}</span>
+    </div>
+    <div class="grid-2" style="margin-bottom:1rem">
+      ${[['PUNTUALIDAD',r.scores.s1,5],['PRESENTACIÓN',r.scores.s2,15],['CONOCIMIENTO',r.scores.s3,10],['DESEMPEÑO',r.scores.s4,50],['MATERIALES',r.scores.s5,15],['EVALUACIÓN',r.scores.s6,5]].map(function(x){return'<div class="card" style="margin:0;padding:.8rem"><div style="font-size:.68rem;color:var(--text2);font-weight:800;margin-bottom:.2rem">'+x[0]+'</div><div style="font-family:\'DM Mono\',monospace;font-weight:600;color:var(--blue-dark)">'+x[1]+'/'+x[2]+'</div></div>';}).join('')}
+    </div>
+    <div class="card" style="margin-bottom:.8rem">
+      <div class="card-title">Datos</div>
+      <div style="font-size:.87rem;display:grid;gap:.4rem;font-weight:600">
+        <div><span style="color:var(--text2)">Operario:</span> ${r.operario}</div>
+        <div><span style="color:var(--text2)">Supervisor:</span> ${r.supervisorName}</div>
+        <div><span style="color:var(--text2)">Fecha:</span> ${new Date(r.date).toLocaleString('es-AR')}</div>
+        ${r.comentarios?'<div><span style="color:var(--text2)">Comentarios:</span> '+r.comentarios+'</div>':''}
+      </div>
+    </div>
+    ${r.geo?'<div class="geo-badge '+(r.geo.locationMatch===true?'confirmed':r.geo.locationMatch===false?'failed':'')+'" style="cursor:default;margin-bottom:1rem"><span class="geo-dot '+(r.geo.locationMatch===false?'pulse':'')+'"></span>'+(r.geo.locationMatch===true?'✅ En el lugar · '+r.geo.distanceM+'m del cliente':r.geo.locationMatch===false?'⚠️ FUERA DE UBICACIÓN · '+r.geo.distanceM+'m del cliente':'📍 GPS: '+r.geo.lat.toFixed(5)+', '+r.geo.lng.toFixed(5)+' (±'+r.geo.accuracy+'m)')+'</div>':''}
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <button class="btn sm secondary" style="flex:1" onclick="exportSingleExcel(window._currentRecord);closeModal()">↓ Excel</button>
+      <button class="btn sm green" style="flex:1" onclick="generatePDF(window._currentRecord,window._currentRecord.signature||null);closeModal()">↓ PDF</button>
+      <button class="btn sm danger" style="flex:1" onclick="deleteRecord('${r._docId||r.id}')">🗑 Eliminar</button>
+    </div>`;
+  openModal();
+}
+
+function deleteRecord(docId){
+  DB.records=DB.records.filter(function(r){return r.id!==docId&&r._docId!==docId;});save();
+  fsDeleteRecord(docId).catch(function(){});
+  closeModal();showToast('Control eliminado');
+  renderHistory(document.getElementById('mainContent'));
+}
+</script>
+
+<!-- ═══ RESUMEN COORDINADOR ═══ -->
+<script>
+function renderResumen(c){
+  const mes=DB.mesActual;
+  const mesData=_mesData[mes]||{};
+  const sups=DB.supervisors.filter(function(s){return s.role!=='admin';});
+  let totalAll=0,doneAll=0;
+  sups.forEach(function(s){
+    const d=mesData[s.user];if(!d)return;
+    totalAll+=d.listado.length;
+    doneAll+=d.listado.filter(function(x){return x.done;}).length;
+  });
+  const pctAll=totalAll?Math.round(doneAll/totalAll*100):0;
+  c.innerHTML=`
+    <div class="page-title">📊 Resumen — ${formatMes(mes)}</div>
+    <div class="page-sub">Avance global de supervisiones</div>
+    <div class="grid-3" style="margin-bottom:1rem">
+      <div class="stat-card"><div class="stat-num">${totalAll}</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-num green">${doneAll}</div><div class="stat-label">Supervisados</div></div>
+      <div class="stat-card"><div class="stat-num orange">${totalAll-doneAll}</div><div class="stat-label">Pendientes</div></div>
+    </div>
+    <div class="card" style="margin-bottom:1rem">
+      <div class="flex-between" style="margin-bottom:.5rem">
+        <span style="font-weight:800;font-size:.9rem">Avance global</span>
+        <span style="font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--blue)">${pctAll}%</span>
+      </div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:${pctAll}%"></div></div>
+    </div>
+    ${sups.map(function(s,i){
+      const d=mesData[s.user];
+      const tot=d?d.listado.length:0;
+      const dn=d?d.listado.filter(function(x){return x.done;}).length:0;
+      const pct=tot?Math.round(dn/tot*100):0;
+      const colors=['#0e8fd6','#5bb84a','#e08c0a'];
+      return'<div class="card" style="margin-bottom:.8rem"><div class="flex-between" style="margin-bottom:.5rem"><div style="display:flex;align-items:center;gap:.6rem"><div style="width:36px;height:36px;border-radius:50%;background:'+colors[i%3]+';display:flex;align-items:center;justify-content:center;font-weight:900;color:white;font-size:.9rem">'+s.name[0]+'</div><div><div style="font-weight:800">'+s.name+'</div><div style="font-size:.75rem;color:var(--text2);font-weight:600">'+dn+'/'+tot+' supervisados</div></div></div><span style="font-family:\'DM Mono\',monospace;font-size:1.4rem;font-weight:700;color:'+colors[i%3]+'">'+pct+'%</span></div><div class="prog-bar-bg"><div class="prog-bar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+colors[i%3]+','+colors[i%3]+')"></div></div></div>';
+    }).join('')}`;
+}
+
+function renderSupervisores(c){
+  const mes=DB.mesActual;
+  const mesData=_mesData[mes]||{};
+  const sups=DB.supervisors.filter(function(s){return s.role!=='admin';});
+  c.innerHTML='<div class="page-title">👷 Supervisores — '+formatMes(mes)+'</div><div class="page-sub">Detalle por supervisor</div>'+
+  sups.map(function(s,i){
+    const d=mesData[s.user];
+    const listado=d?d.listado:[];
+    const tot=listado.length;
+    const dn=listado.filter(function(x){return x.done;}).length;
+    const pct=tot?Math.round(dn/tot*100):0;
+    const colors=['#0e8fd6','#5bb84a','#e08c0a'];
+    return'<div class="sup-card"><div class="sup-card-header" onclick="document.getElementById(\'sup-collapse-'+i+'\').classList.toggle(\'open\')"><div style="display:flex;align-items:center;gap:.7rem"><div style="width:40px;height:40px;border-radius:50%;background:'+colors[i%3]+';display:flex;align-items:center;justify-content:center;font-weight:900;color:white">'+s.name[0]+'</div><div><div style="font-weight:800;font-size:.95rem">'+s.name+'</div><div style="font-size:.75rem;color:var(--text2);font-weight:600">'+dn+' de '+tot+' · '+pct+'%</div></div></div><span class="sup-pct">'+pct+'% ▾</span></div>'+
+    '<div class="sup-collapse" id="sup-collapse-'+i+'">'+
+    '<div style="padding:.6rem 1.2rem"><div class="prog-bar-bg"><div class="prog-bar-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+colors[i%3]+','+colors[i%3]+')"></div></div></div>'+
+    (listado.length?listado.map(function(x){
+      const locIcon=x.locationMatch===false?'⚠️':x.locationMatch===true?'✅':'📍';
+      return'<div style="display:flex;align-items:center;gap:.7rem;padding:.6rem 1.2rem;border-top:1px solid var(--border)'+(x.done&&x.score<=73?';background:rgba(224,62,62,.03)':'')+'"><div style="font-size:1.1rem">'+locIcon+'</div><div style="flex:1;min-width:0"><div style="font-size:.85rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+x.clientName+'</div><div style="font-size:.72rem;color:var(--text2)">'+x.clientAddr+'</div></div>'+(x.done?'<div style="text-align:right;flex-shrink:0"><div style="font-size:.72rem;font-weight:800;color:'+(x.score<=73?'var(--danger)':'var(--green-dark)')+'">'+x.score+'/100 '+(x.score<=73?'🔴':x.qual)+'</div><div style="font-size:.68rem;color:var(--text2)">'+x.doneDate+'</div></div>':'<span style="font-size:.72rem;font-weight:800;color:var(--warn);flex-shrink:0">Pendiente</span>')+'</div>';
+    }).join(''):'<div style="padding:1rem 1.2rem;text-align:center;color:var(--text3);font-size:.85rem">Sin listado asignado</div>')+
+    '</div></div>';
+  }).join('');
+}
+</script>
+
+<!-- ═══ EXCEL + ADMIN ═══ -->
+<script>
+function toRow(r){return{'ID':r.id,'Fecha':new Date(r.date).toLocaleString('es-AR'),'Cliente':r.clientName,'Dirección':r.clientAddr,'Operario':r.operario,'Supervisor':r.supervisorName,'Pts Puntualidad':r.scores.s1,'Pts Presentación':r.scores.s2,'Pts Conocimiento':r.scores.s3,'Pts Desempeño':r.scores.s4,'Pts Materiales':r.scores.s5,'Pts Eval. Final':r.scores.s6,'Total':r.scores.total,'Calificación':r.qual,'Opinión Gral':(r.values?.opinion_general||'').toUpperCase(),'Cliente Presente':r.values?.cliente_presente==='si'?'Sí':'No','Comentarios':r.comentarios||'','Supervisión Extra':r.esExtra?'Sí':'No','Verificación GPS':r.geo?.locationMatch===true?'En el lugar':r.geo?.locationMatch===false?'Fuera de ubicación':'Sin verificar','Distancia(m)':r.geo?.distanceM||''};}
+
+function exportSingleExcel(r){
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet([toRow(r)]),'Control');
+  XLSX.writeFile(wb,'MegaClean_F013_'+r.clientName.replace(/\s+/g,'_')+'_'+new Date(r.date).toLocaleDateString('es-AR').replace(/\//g,'-')+'.xlsx');
+  showToast('Excel descargado ✓');
+}
+
+async function exportAllExcelFS(){
+  showToast('Preparando Excel...');
+  const records=await fsLoadRecords().catch(function(){return[];});
+  const all=records.length?records:DB.records;
+  const mine=currentUser.role==='admin'?all:all.filter(function(r){return r.supervisorUser===currentUser.user;});
+  if(!mine.length){showToast('No hay controles para exportar');return;}
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(mine.map(toRow)),'Controles');
+  XLSX.writeFile(wb,'MegaClean_Controles_'+new Date().toLocaleDateString('es-AR').replace(/\//g,'-')+'.xlsx');
+  showToast('Excel exportado ✓');
+}
+
+function renderAdmin(c){
+  const isAdmin=currentUser.role==='admin';
+  const mes=DB.mesActual;
+  const sups=DB.supervisors.filter(function(s){return s.role!=='admin';});
+  c.innerHTML=`
+    <div class="page-title">⚙️ Administración</div>
+    <div class="page-sub">Gestión del mes, clientes y supervisores</div>
+
+    <div class="admin-section">
+      <h3>📅 Mes actual: ${formatMes(mes)}</h3>
+      <div class="card">
+        <div class="field" style="margin-bottom:.8rem"><label>Cambiar mes</label><input type="month" id="inputMes" class="inline-input" value="${mes}"></div>
+        <button class="btn sm" onclick="cambiarMes()">Actualizar mes</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>📋 Cargar listado mensual por supervisor</h3>
+      <div class="card">
+        <div class="field" style="margin-bottom:.8rem"><label>Supervisor</label>
+          <select id="uploadSupSelect" class="form-select">
+            <option value="">Seleccioná un supervisor...</option>
+            ${sups.map(function(s){return'<option value="'+s.user+'">'+s.name+'</option>';}).join('')}
+          </select>
+        </div>
+        <div class="upload-zone" onclick="document.getElementById('xlsxMesInput').click()">
+          <input type="file" id="xlsxMesInput" accept=".xlsx,.xls" onchange="importListadoMes(this)">
+          <div style="font-size:1.5rem;margin-bottom:.5rem">📊</div>
+          <div style="font-weight:800;margin-bottom:.3rem">Subir Excel del mes</div>
+          <div class="text-sm">Columnas: <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:.1rem .4rem;border-radius:4px">nombre</code> y <code style="font-family:'DM Mono',monospace;background:var(--bg);padding:.1rem .4rem;border-radius:4px">direccion</code></div>
+        </div>
+        <div id="importMesMsg" style="margin-top:.6rem;font-size:.85rem;display:none;font-weight:700"></div>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>📥 Importar base de clientes desde Excel</h3>
+      <div class="upload-zone" onclick="document.getElementById('xlsxInput').click()">
+        <input type="file" id="xlsxInput" accept=".xlsx,.xls,.csv" onchange="importClients(this)">
+        <div style="font-size:1.5rem;margin-bottom:.5rem">🏢</div>
+        <div style="font-weight:800;margin-bottom:.3rem">Subir base de clientes</div>
+        <div class="text-sm">Columnas: nombre y direccion</div>
+      </div>
+      <div id="importMsg" style="margin-top:.6rem;font-size:.85rem;display:none;font-weight:700"></div>
+    </div>
+
+    <div class="admin-section">
+      <h3>➕ Agregar cliente manual</h3>
+      <div class="card">
+        <div class="field" style="margin-bottom:.8rem"><label>Nombre</label><input type="text" id="newClientName" class="inline-input" placeholder="Nombre del cliente"></div>
+        <div class="field" style="margin-bottom:.8rem"><label>Dirección</label><input type="text" id="newClientAddr" class="inline-input" placeholder="Dirección"></div>
+        <button class="btn sm" onclick="addClientManual()">Agregar cliente</button>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h3>🏢 Clientes (${DB.clients.length})</h3>
+      <div class="search-wrap" style="margin-bottom:.8rem">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar cliente..." oninput="filterAdminClients(this.value)" id="adminClientSearch">
+      </div>
+      <div id="adminClientList">
+        ${DB.clients.map(function(cl){return'<div class="client-manage-item"><div class="client-avatar" style="background:'+cl.color+';width:34px;height:34px;font-size:.85rem;border-radius:8px">'+cl.name[0]+'</div><div style="flex:1;min-width:0"><div style="font-size:.88rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</div><div style="font-size:.75rem;color:var(--text2);font-weight:600">'+cl.address+'</div></div><button class="btn danger sm" onclick="removeClient(\''+cl.id+'\')">✕</button></div>';}).join('')}
+      </div>
+    </div>
+
+    ${isAdmin?`
+    <div class="admin-section">
+      <h3>👤 Supervisores</h3>
+      ${DB.supervisors.map(function(s){return'<div class="supervisor-item" style="flex-direction:column;align-items:stretch;gap:.5rem"><div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:.9rem;font-weight:800">'+s.name+'</div><div style="font-size:.75rem;color:var(--text2);font-family:\'DM Mono\',monospace">Usuario: '+s.user+'</div><div style="font-size:.75rem;color:var(--text2);font-family:\'DM Mono\',monospace">Contraseña: <span style="background:var(--bg);padding:.1rem .4rem;border-radius:4px">'+s.pass+'</span></div></div><div style="display:flex;gap:.4rem;flex-shrink:0"><span class="pill '+(s.role==='admin'?'admin':'')+'">'+( s.role==='admin'?'Admin':'Supervisor')+'</span>'+(s.role!=='admin'?'<button class="btn sm secondary" onclick="openEditSupervisor(\''+s.user+'\')">✏️</button><button class="btn danger sm" onclick="removeSupervisor(\''+s.user+'\')">✕</button>':'')+'</div></div></div>';}).join('')}
+      <div class="card mt">
+        <div style="font-weight:800;margin-bottom:.8rem">Nuevo supervisor</div>
+        <div class="field" style="margin-bottom:.7rem"><label>Nombre</label><input type="text" id="newSupName" class="inline-input" placeholder="Nombre completo"></div>
+        <div class="field" style="margin-bottom:.7rem"><label>Usuario</label><input type="text" id="newSupUser" class="inline-input" placeholder="usuario"></div>
+        <div class="field" style="margin-bottom:.8rem"><label>Contraseña</label><input type="text" id="newSupPass" class="inline-input" placeholder="contraseña"></div>
+        <button class="btn sm" onclick="addSupervisor()">Agregar supervisor</button>
+      </div>
+    </div>
+    <div class="admin-section">
+      <h3>📊 Exportar</h3>
+      <button class="btn green" onclick="exportAllExcelFS()">↓ Exportar todos los controles a Excel</button>
+    </div>
+    <div class="admin-section">
+      <h3>🔄 Sincronización</h3>
+      <button class="btn sm secondary" onclick="forceSyncSupervisors()">🔄 Sincronizar supervisores a Firebase</button>
+    </div>`:''}`;
+}
+
+function cambiarMes(){
+  const v=document.getElementById('inputMes').value;
+  if(!v)return;
+  DB.mesActual=v;save();
+  // Escuchar nuevo mes en Firebase
+  if(window._firebaseReady){
+    const{doc,onSnapshot}=window._fsLib;
+    try{onSnapshot(doc(window._db,'meses',v),function(snap){if(snap.exists()&&snap.data().data){_mesData[v]=snap.data().data;save();refreshListado();refreshIfAdmin('tab-resumen');refreshIfAdmin('tab-supervisores');}});}catch(e){}
+    fsLoadMes(v).then(function(d){if(d&&d.data){_mesData[v]=d.data;save();}renderAdmin(document.getElementById('mainContent'));});
+  } else {
+    renderAdmin(document.getElementById('mainContent'));
+  }
+  showToast('Mes actualizado: '+formatMes(v));
+}
+
+function importListadoMes(input){
+  const file=input.files[0];if(!file)return;
+  const supUser=document.getElementById('uploadSupSelect').value;
+  const msgEl=document.getElementById('importMesMsg');
+  function showMsg(text,ok){if(msgEl){msgEl.style.display='block';msgEl.style.color=ok?'var(--green-dark)':'var(--danger)';msgEl.textContent=text;}}
+  if(!supUser){showMsg('Seleccioná un supervisor primero',false);return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!rows.length){showMsg('El archivo está vacío',false);return;}
+      const norm=function(s){return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');};
+      const allKeys=Object.keys(rows[0]);
+      const nameKey=allKeys.find(function(k){const n=norm(k);return['nombre','nombrecliente','nombredecliente','cliente','name'].includes(n);});
+      const addrKey=allKeys.find(function(k){const n=norm(k);return['direccion','domicilio','address','direccioncliente','dir'].includes(n);});
+      if(!nameKey){showMsg('No se encontró columna de nombre. Columnas: '+allKeys.join(', '),false);return;}
+      const mes=DB.mesActual;
+      if(!_mesData[mes])_mesData[mes]={};
+      const listado=[];
+      rows.forEach(function(row,i){
+        const name=String(row[nameKey]||'').trim();
+        const addr=addrKey?String(row[addrKey]||'').trim():'';
+        if(!name)return;
+        // Buscar el clientId en la base de clientes
+        const found=DB.clients.find(function(c){return c.name.toLowerCase()===name.toLowerCase();});
+        listado.push({clientId:found?found.id:'ext_'+Date.now()+'_'+i,clientName:name,clientAddr:addr,done:false,doneDate:null,doneHour:null,recordId:null,score:null,qual:null,locationMatch:null});
+      });
+      _mesData[mes][supUser]={listado,cargadoEl:new Date().toISOString()};
+      save();
+      fsSaveMes(mes,_mesData[mes]).then(function(){showMsg('✓ '+listado.length+' clientes cargados para '+DB.supervisors.find(function(s){return s.user===supUser;})?.name+' — '+formatMes(mes),true);}).catch(function(){showMsg('Guardado local. Error en Firebase.',false);});
+      showToast(listado.length+' clientes cargados ✓');
+    }catch(err){showMsg('Error al leer el archivo: '+err.message,false);}
   };
   reader.readAsArrayBuffer(file);
-  input.value = '';
 }
 
-function parseDate(str) {
-  if (!str) return null;
-  const s = String(str).trim();
-  // dd/mm/yyyy
-  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-  // yyyy-mm-dd
-  const m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3]);
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-}
-
-function parseAmount(val) {
-  if (val === null || val === undefined || val === '') return 0;
-  const s = String(val).replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
-  return parseFloat(s) || 0;
-}
-
-// Convierte número serial de Excel a fecha JS
-function excelDateToJS(serial) {
-  if (!serial || isNaN(serial)) return null;
-  // Excel epoch: 1 enero 1900 = 1, con bug del año bisiesto 1900
-  const d = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
-  return d;
-}
-
-function processRows(rows, filename) {
-  // El reporte de Skylab/Crystal Reports tiene esta estructura exacta por fila:
-  // Fila cliente:   C0=nombre, C22="Codigo :", C24=código
-  // Fila dirección: C0=" Direccion:", C3=dirección, C16="Tel.:", C19=teléfono
-  // Fila encabezado: C0="Fecha", C2="Detalle" ...
-  // Fila movimiento: C0=fecha(número), C2=tipo, C10=número, C12=fechaVto(número), C19=saldo
-
-  const clientsMap = {};
-  let currentName = '';
-  let currentPhone = '';
-  let currentDir = '';
-  let currentCode = '';
-  let esperandoDir = false;
-  let lastValidName = '';
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (!row) continue;
-
-    const c = (idx) => row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '';
-    const n = (idx) => {
-      const v = row[idx];
-      if (v === undefined || v === null || v === '') return null;
-      const num = parseFloat(String(v).replace(',','.'));
-      return isNaN(num) ? null : num;
-    };
-
-    const c0 = c(0);
-    const c22 = c(22);
-
-    // ── Línea de nombre de cliente ──
-    // Patrón A: C22 = "Codigo :" con nombre en C0 misma fila
-    // Patrón B (Silvana): C23 = "Codigo :" con nombre en fila anterior
-    const c23 = c(23);
-    const esCodigoRow = (c22 === 'Codigo :') || (c23 === 'Codigo :');
-
-    if (esCodigoRow) {
-      let candidateName = c0.trim();
-      if (!candidateName || candidateName.length < 3 || /^[\d]/.test(candidateName)) {
-        candidateName = lastValidName || '';
-      }
-      if (candidateName.startsWith(' ')) candidateName = candidateName.slice(1);
-      currentName = candidateName.toUpperCase();
-      currentCode = c(24) || c(25) || '';
-      currentPhone = '';
-      currentDir = '';
-      esperandoDir = true;
-
-      if (currentName && !clientsMap[currentName]) {
-        clientsMap[currentName] = {
-          nombre: currentName,
-          codigo: currentCode,
-          telefono: '',
-          telefono_raw: '',
-          direccion: '',
-          movimientos: [],
-          saldoTotal: 0,
-          admin: buscarAdmin(currentName)
-        };
-      }
-      continue;
-    }
-
-    // Guardar el último nombre válido de cliente
-    if (c0 && c0.length > 3 && !/^[\d]/.test(c0) &&
-        !['Fecha','Detalle','Direccion','Codigo'].some(x => c0.includes(x))) {
-      lastValidName = c0.trim();
-    }
-
-
-    // ── Línea de dirección/teléfono ──
-    if (esperandoDir && c0.replace(/\s/g,'').toLowerCase().startsWith('direccion')) {
-      currentDir = c(3);
-      currentPhone = c(19);
-      if (clientsMap[currentName]) {
-        clientsMap[currentName].direccion = currentDir;
-        clientsMap[currentName].telefono_raw = currentPhone;
-        clientsMap[currentName].telefono = limpiarTelefono(currentPhone);
-      }
-      esperandoDir = false;
-      continue;
-    }
-
-    // ── Línea de movimiento ──
-    // C0 = fecha emisión (número Excel), C2 = tipo comprobante (string),
-    // C10 = número comprobante, C12 = fecha vto (número Excel), C19 = saldo
-    if (currentName && clientsMap[currentName]) {
-      const fechaNum = n(0);
-      const tipo = c(2);
-      const tiposValidos = ['factura','n/debito','n/credito','recibo','adelanto','n/débito','n/crédito'];
-      const esTipo = tiposValidos.some(t => tipo.toLowerCase().includes(t));
-
-      if (fechaNum && fechaNum > 40000 && fechaNum < 50000 && esTipo) {
-        const fechaEmision = excelDateToJS(fechaNum);
-        const vtoNum = n(12);
-        const fechaVto = vtoNum ? excelDateToJS(vtoNum) : fechaEmision;
-        const numero = c(10);
-        const saldo = n(19);
-
-        if (saldo !== null && saldo > 0) {
-          clientsMap[currentName].movimientos.push({
-            tipo: tipo.toUpperCase(),
-            numero,
-            fechaEmision,
-            fechaVto,
-            importe: n(14) || saldo,
-            saldo
-          });
-          clientsMap[currentName].saldoTotal += saldo;
-        }
-      }
-    }
-  }
-
-  const FECHA_CORTE = new Date(2025, 0, 1); // 01/01/2025
-
-  // Para cada cliente, filtrar solo movimientos posteriores al corte
-  Object.values(clientsMap).forEach(c => {
-    c.movimientos = c.movimientos.filter(m => {
-      const fecha = m.fechaEmision || m.fechaVto;
-      return fecha && new Date(fecha) >= FECHA_CORTE;
-    });
-    c.saldoTotal = c.movimientos.reduce((s, m) => s + m.saldo, 0);
-  });
-
-  // Solo clientes con saldo > 1 después del corte
-  let clients = Object.values(clientsMap).filter(c => c.saldoTotal > 1);
-
-  // Calcular estado semáforo
-  clients.forEach(c => {
-    c.estado = calcularEstado(c);
-    c.diasVencido = calcularDiasVencido(c);
-  });
-
-  allClients = clients;
-  updateStats();
-  renderTable();
-
-  const fecha = new Date().toLocaleDateString('es-AR');
-  document.getElementById('import-status').textContent = `${clients.length} clientes · ${fecha}`;
-  showToast(`✓ ${clients.length} clientes importados correctamente`);
-}
-
-function buscarAdmin(nombre) {
-  const n = nombre.toUpperCase().trim();
-  // Búsqueda exacta
-  if (ADMINS_MAP[n]) return ADMINS_MAP[n];
-  // Búsqueda por comienzo de nombre (para casos truncados en el reporte)
-  for (const key of Object.keys(ADMINS_MAP)) {
-    const k = key.toUpperCase();
-    // Solo matchear si uno empieza con el otro y tiene al menos 10 chars
-    if (k.length >= 10 && n.length >= 10) {
-      if (n.startsWith(k) || k.startsWith(n)) {
-        return ADMINS_MAP[key];
-      }
-    }
-  }
-  return null;
-}
-
-function limpiarTelefono(tel) {
-  if (!tel) return '';
-  // Extraer solo dígitos y algunos caracteres válidos
-  const nums = tel.replace(/[^\d\s\+\-\(\)]/g, '').trim();
-  // Intentar normalizar para Argentina
-  const digits = nums.replace(/\D/g, '');
-  if (digits.length >= 10) {
-    // Si empieza con 54, ya tiene código de país
-    if (digits.startsWith('54')) return '+' + digits;
-    // Si empieza con 0351 o similar (código área)
-    if (digits.startsWith('0')) return '+549' + digits.slice(1);
-    // Si es solo número local de 10 dígitos
-    if (digits.length === 10) return '+549' + digits;
-  }
-  return digits || tel;
-}
-
-function calcularEstado(client) {
-  if (!client.movimientos.length) return 'green';
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  
-  let tieneVencido = false;
-  let tienePorVencer = false;
-  
-  client.movimientos.forEach(m => {
-    if (!m.fechaVto) return;
-    const vto = new Date(m.fechaVto);
-    vto.setHours(0,0,0,0);
-    const diff = Math.floor((today - vto) / (1000*60*60*24));
-    if (diff > 0) tieneVencido = true;
-    else if (diff > -15) tienePorVencer = true;
-  });
-  
-  if (tieneVencido) return 'red';
-  if (tienePorVencer) return 'yellow';
-  return 'green';
-}
-
-function calcularDiasVencido(client) {
-  if (!client.movimientos.length) return 0;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  let maxDias = 0;
-  client.movimientos.forEach(m => {
-    if (!m.fechaVto) return;
-    const vto = new Date(m.fechaVto);
-    vto.setHours(0,0,0,0);
-    const diff = Math.floor((today - vto) / (1000*60*60*24));
-    if (diff > maxDias) maxDias = diff;
-  });
-  return maxDias;
-}
-
-// ============================================================
-// STATS
-// ============================================================
-function updateStats() {
-  const total = allClients.length;
-  const reds = allClients.filter(c => c.estado === 'red');
-  const yellows = allClients.filter(c => c.estado === 'yellow');
-  const greens = allClients.filter(c => c.estado === 'green');
-
-  const sumMonto = arr => arr.reduce((s, c) => s + c.saldoTotal, 0);
-  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
-
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-red').textContent = reds.length;
-  document.getElementById('stat-red-monto').textContent = fmt(sumMonto(reds));
-  document.getElementById('stat-yellow').textContent = yellows.length;
-  document.getElementById('stat-yellow-monto').textContent = fmt(sumMonto(yellows));
-  document.getElementById('stat-green').textContent = greens.length;
-  document.getElementById('stat-green-monto').textContent = fmt(sumMonto(greens));
-}
-
-// ============================================================
-// TABLE
-// ============================================================
-function setFilter(f) {
-  currentFilter = f;
-  ['all','red','yellow','green','judicial'].forEach(x => {
-    const btn = document.getElementById('f-' + x);
-    if (btn) btn.classList.remove('active');
-  });
-  document.getElementById('f-' + f).classList.add('active');
-  renderTable();
-}
-
-function renderTable() {
-  const search = document.getElementById('search').value.toLowerCase();
-  const sort = document.getElementById('sort-select').value;
-
-  const isJudicial = c => {
-    const n = c.nombre.trim().toUpperCase();
-    for (const j of judiciales) {
-      if (n === j.trim().toUpperCase()) return true;
-    }
-    return false;
+function importClients(input){
+  const file=input.files[0];if(!file)return;
+  const msgEl=document.getElementById('importMsg');
+  function showMsg(text,ok){if(msgEl){msgEl.style.display='block';msgEl.style.color=ok?'var(--green-dark)':'var(--danger)';msgEl.textContent=text;}}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!rows.length){showMsg('El archivo está vacío',false);return;}
+      const norm=function(s){return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');};
+      const allKeys=Object.keys(rows[0]);
+      const nameKey=allKeys.find(function(k){const n=norm(k);return['nombre','nombrecliente','nombredecliente','cliente','name'].includes(n);});
+      const addrKey=allKeys.find(function(k){const n=norm(k);return['direccion','domicilio','address','direccioncliente','dir'].includes(n);});
+      if(!nameKey){showMsg('No se encontró columna de nombre. Columnas: '+allKeys.join(', '),false);return;}
+      const cols=['#0e8fd6','#5bb84a','#0a6fa8','#3d8f30','#38a0c8'];
+      let added=0;
+      rows.forEach(function(row,i){
+        const name=String(row[nameKey]||'').trim();
+        const addr=addrKey?String(row[addrKey]||'').trim():'';
+        if(name){DB.clients.push({id:'c'+Date.now()+'_'+i,name,address:addr,color:cols[DB.clients.length%cols.length]});added++;}
+      });
+      save();fsSaveClients(DB.clients).catch(function(){});
+      showMsg('✓ '+added+' clientes importados',true);
+      showToast(added+' clientes importados ✓');
+      renderAdmin(document.getElementById('mainContent'));
+    }catch(err){showMsg('Error: '+err.message,false);}
   };
-
-  let data = allClients.filter(c => {
-    if (currentFilter === 'judicial') return isJudicial(c);
-    // En vista normal, excluir judiciales
-    if (isJudicial(c) && currentFilter !== 'judicial') return false;
-    if (currentFilter !== 'all' && c.estado !== currentFilter) return false;
-    if (search) {
-      const hay = (c.nombre + ' ' + (c.admin||'') + ' ' + c.codigo).toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
-    return true;
-  });
-
-  // Sort
-  data.sort((a, b) => {
-    if (sort === 'monto-desc') return b.saldoTotal - a.saldoTotal;
-    if (sort === 'monto-asc') return a.saldoTotal - b.saldoTotal;
-    if (sort === 'nombre-asc') return a.nombre.localeCompare(b.nombre);
-    if (sort === 'dias-desc') return b.diasVencido - a.diasVencido;
-    return 0;
-  });
-
-  document.getElementById('table-count').textContent = data.length + ' clientes';
-
-  if (!data.length) {
-    document.getElementById('table-container').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">${allClients.length ? '🔍' : '📂'}</div>
-        <div class="empty-title">${allClients.length ? 'Sin resultados' : 'Sin datos'}</div>
-        <div class="empty-sub">${allClients.length ? 'Probá con otro filtro o búsqueda' : 'Cargá el reporte XLS de Skylab para comenzar'}</div>
-      </div>`;
-    return;
-  }
-
-  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
-
-  const colores = { red: 'amount-red', yellow: 'amount-yellow', green: 'amount-green' };
-
-  const rows = data.map((c, i) => {
-    const esJudicial = isJudicial(c);
-    const badge = esJudicial
-      ? `<span class="badge badge-judicial"><span class="badge-dot"></span>Judicial</span>`
-      : c.estado === 'red'
-      ? `<span class="badge badge-red"><span class="badge-dot"></span>Vencido${c.diasVencido > 0 ? ' · '+c.diasVencido+'d' : ''}</span>`
-      : c.estado === 'yellow'
-      ? `<span class="badge badge-yellow"><span class="badge-dot"></span>Por vencer</span>`
-      : `<span class="badge badge-green"><span class="badge-dot"></span>Al día</span>`;
-
-    const adminTag = c.admin ? `<span class="admin-tag">${c.admin}</span>` : '';
-    const vto = c.movimientos.length ? fmtDate(c.movimientos[0].fechaVto) : '—';
-    const telDisplay = c.telefono_raw ? `<span class="client-phone">${c.telefono_raw}</span>` : '<span class="client-phone" style="color:var(--text3)">Sin teléfono</span>';
-
-    const hasPhone = !!c.telefono;
-    const waBtn = hasPhone
-      ? `<button class="btn-wa" onclick="abrirModal(${i}, event)">💬 WhatsApp</button>`
-      : `<button class="btn-detail" onclick="abrirModal(${i}, event)">Ver detalle</button>`;
-
-    const judBtn = esJudicial
-      ? `<button class="btn-judicial-on" onclick="toggleJudicial('${c.nombre.replace(/'/g,"\'")}')">⚖️ Quitar judicial</button>`
-      : `<button class="btn-judicial-off" onclick="toggleJudicial('${c.nombre.replace(/'/g,"\'")}')">⚖️ Marcar judicial</button>`;
-
-    return `<tr>
-      <td>
-        <div class="client-name">${c.nombre}</div>
-        <div class="client-code">${c.codigo}</div>
-        ${adminTag}
-        ${telDisplay}
-      </td>
-      <td>${badge}</td>
-      <td style="text-align:center;color:var(--text2);font-size:12px">${vto}</td>
-      <td class="amount ${colores[c.estado]}">${fmt(c.saldoTotal)}</td>
-      <td>
-        <div class="actions">
-          ${waBtn}
-          ${hasPhone ? `<button class="btn-detail" onclick="abrirModal(${i}, event)">Detalle</button>` : ''}
-          ${judBtn}
-        </div>
-      </td>
-    </tr>`;
-  });
-
-  // Guardar índice filtrado para el modal
-  window._filteredClients = data;
-
-  document.getElementById('table-container').innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Estado</th>
-          <th>Próx. vto.</th>
-          <th style="text-align:right">Saldo</th>
-          <th style="text-align:right">Acción</th>
-        </tr>
-      </thead>
-      <tbody>${rows.join('')}</tbody>
-    </table>`;
+  reader.readAsArrayBuffer(file);
 }
 
-// ============================================================
-// MODAL DETALLE + WHATSAPP
-// ============================================================
-function abrirModal(idx, event) {
-  if (event) event.stopPropagation();
-  const c = window._filteredClients[idx];
-  if (!c) return;
-
-  document.getElementById('modal-title').textContent = c.nombre;
-  document.getElementById('modal-subtitle').textContent = 'Código ' + c.codigo + (c.admin ? ' · ' + c.admin : '');
-
-  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-
-  const facturas = c.movimientos.map(m => `
-    <div class="factura-item">
-      <span class="factura-num">${m.tipo} ${m.numero}</span>
-      <span class="factura-dates">Emisión: ${fmtDate(m.fechaEmision)}<br>Vto: ${fmtDate(m.fechaVto)}</span>
-      <span class="factura-saldo ${m.saldo > 0 ? 'amount-red' : ''}">${fmt(m.saldo)}</span>
-    </div>`).join('');
-
-  const msg = generarMensajeWA(c);
-  const waUrl = c.telefono ? `https://wa.me/${c.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}` : '';
-
-  const waSection = c.telefono
-    ? `<div class="modal-section">
-        <div class="modal-section-title">Mensaje WhatsApp</div>
-        <div class="wa-msg-box">${msg}</div>
-        <a href="${waUrl}" target="_blank" class="btn-wa-full">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-          Abrir en WhatsApp
-        </a>
-      </div>`
-    : `<div class="no-phone-note">Este cliente no tiene teléfono registrado en el reporte.</div>`;
-
-  document.getElementById('modal-body').innerHTML = `
-    <div class="modal-section">
-      <div class="modal-section-title">Información</div>
-      <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion || '—'}</span></div>
-      <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono_raw || '—'}</span></div>
-      <div class="detail-row"><span class="detail-label">Administrador</span><span class="detail-value">${c.admin || '—'}</span></div>
-      <div class="detail-row"><span class="detail-label">Saldo total</span><span class="detail-value">${fmt(c.saldoTotal)}</span></div>
-      <div class="detail-row"><span class="detail-label">Días vencido</span><span class="detail-value">${c.diasVencido > 0 ? c.diasVencido + ' días' : '—'}</span></div>
-    </div>
-    <div class="modal-section">
-      <div class="modal-section-title">Comprobantes pendientes (${c.movimientos.length})</div>
-      <div class="facturas-list">${facturas || '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin comprobantes detallados</div>'}</div>
-    </div>
-    ${waSection}`;
-
-  document.getElementById('modal-overlay').style.display = 'flex';
+function filterAdminClients(q){
+  const el=document.getElementById('adminClientList');if(!el)return;
+  const list=q?DB.clients.filter(function(c){return c.name.toLowerCase().includes(q.toLowerCase())||c.address.toLowerCase().includes(q.toLowerCase());}):DB.clients;
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text3);font-size:.85rem">No se encontraron clientes</div>';return;}
+  el.innerHTML=list.map(function(cl){return'<div class="client-manage-item"><div class="client-avatar" style="background:'+cl.color+';width:34px;height:34px;font-size:.85rem;border-radius:8px">'+cl.name[0]+'</div><div style="flex:1;min-width:0"><div style="font-size:.88rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cl.name+'</div><div style="font-size:.75rem;color:var(--text2);font-weight:600">'+cl.address+'</div></div><button class="btn danger sm" onclick="removeClient(\''+cl.id+'\')">✕</button></div>';}).join('');
 }
 
-function generarMensajeWA(c) {
-  const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
-  
-  const facturasList = c.movimientos.slice(0, 5).map(m =>
-    `  • ${m.tipo} ${m.numero} — Vto: ${fmtDate(m.fechaVto)} — ${fmt(m.saldo)}`
-  ).join('\n');
-
-  return `Estimado/a ${c.nombre},
-
-Le informamos que registra un saldo pendiente de *${fmt(c.saldoTotal)}* con MegaClean Servicios.
-
-Comprobantes pendientes:
-${facturasList}
-
-Le solicitamos regularizar su situación a la brevedad. Para cualquier consulta o para coordinar el pago, no dude en contactarnos.
-
-Gracias,
-Administración MegaClean`;
+function addClientManual(){
+  const name=document.getElementById('newClientName').value.trim();
+  const addr=document.getElementById('newClientAddr').value.trim();
+  if(!name||!addr){showToast('Completá nombre y dirección');return;}
+  const cols=['#0e8fd6','#5bb84a','#0a6fa8','#3d8f30','#38a0c8'];
+  DB.clients.push({id:'c'+Date.now(),name,address:addr,color:cols[DB.clients.length%cols.length]});
+  save();fsSaveClients(DB.clients).catch(function(){});
+  showToast('Cliente agregado ✓');renderAdmin(document.getElementById('mainContent'));
 }
 
-function closeModal(event) {
-  if (event.target === document.getElementById('modal-overlay')) closeModalDirect();
+function removeClient(id){
+  DB.clients=DB.clients.filter(function(c){return c.id!==id;});
+  save();fsSaveClients(DB.clients).catch(function(){});
+  showToast('Cliente eliminado');renderAdmin(document.getElementById('mainContent'));
 }
 
-function closeModalDirect() {
-  document.getElementById('modal-overlay').style.display = 'none';
+function openEditSupervisor(user){
+  const s=DB.supervisors.find(function(x){return x.user===user;});if(!s)return;
+  document.getElementById('modalBody').innerHTML='<h3>✏️ Editar supervisor</h3><div class="field" style="margin-bottom:.7rem"><label>Nombre</label><input type="text" id="editSupName" class="inline-input" value="'+s.name+'"></div><div class="field" style="margin-bottom:.7rem"><label>Usuario</label><input type="text" id="editSupUser" class="inline-input" value="'+s.user+'"></div><div class="field" style="margin-bottom:.8rem"><label>Contraseña</label><input type="text" id="editSupPass" class="inline-input" value="'+s.pass+'"></div><div style="display:flex;gap:.6rem;margin-top:.5rem"><button class="btn sm green" onclick="saveEditSupervisor(\''+user+'\')">💾 Guardar</button><button class="btn sm secondary" onclick="closeModal()">Cancelar</button></div>';
+  openModal();
 }
 
-// ============================================================
-// JUDICIAL
-// ============================================================
-function toggleJudicial(nombre) {
-  const n = nombre.trim().toUpperCase();
-  // Buscar si ya existe (por si fue guardado con diferente capitalización)
-  let found = null;
-  for (const j of judiciales) {
-    if (j.trim().toUpperCase() === n) { found = j; break; }
-  }
-  if (found !== null) {
-    judiciales.delete(found);
-    showToast('Quitado de judicial: ' + nombre);
-  } else {
-    judiciales.add(nombre.trim());
-    showToast('Marcado como judicial: ' + nombre);
-  }
-  saveToStorage();
-  renderTable();
+function saveEditSupervisor(oldUser){
+  const name=document.getElementById('editSupName').value.trim();
+  const user=document.getElementById('editSupUser').value.trim();
+  const pass=document.getElementById('editSupPass').value.trim();
+  if(!name||!user||!pass){showToast('Completá todos los campos');return;}
+  if(user!==oldUser&&DB.supervisors.find(function(s){return s.user===user;})){showToast('Ese usuario ya existe');return;}
+  const idx=DB.supervisors.findIndex(function(s){return s.user===oldUser;});if(idx===-1)return;
+  DB.supervisors[idx]=Object.assign({},DB.supervisors[idx],{name,user,pass});
+  save();fsSaveSupervisors(DB.supervisors).catch(function(){});
+  closeModal();showToast('Supervisor actualizado ✓');renderAdmin(document.getElementById('mainContent'));
 }
 
-// ============================================================
-// TOAST
-// ============================================================
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+function addSupervisor(){
+  const name=document.getElementById('newSupName')?.value?.trim();
+  const user=document.getElementById('newSupUser')?.value?.trim();
+  const pass=document.getElementById('newSupPass')?.value;
+  if(!name||!user||!pass){showToast('Completá todos los campos');return;}
+  if(DB.supervisors.find(function(s){return s.user===user;})){showToast('Ese usuario ya existe');return;}
+  DB.supervisors.push({user,pass,name,role:'supervisor'});
+  save();fsSaveSupervisors(DB.supervisors).catch(function(){});
+  showToast('Supervisor agregado ✓');renderAdmin(document.getElementById('mainContent'));
 }
+
+function removeSupervisor(user){
+  if(!confirm('¿Seguro que querés eliminar este supervisor?'))return;
+  DB.supervisors=DB.supervisors.filter(function(s){return s.user!==user;});
+  save();fsSaveSupervisors(DB.supervisors).catch(function(){});
+  showToast('Supervisor eliminado');renderAdmin(document.getElementById('mainContent'));
+}
+
+function forceSyncSupervisors(){
+  fsSaveSupervisors(DB.supervisors).then(function(){showToast('✓ Supervisores sincronizados');}).catch(function(){showToast('Error al sincronizar');});
+}
+</script>
+
+<!-- ═══ UTILS ═══ -->
+<script>
+function openModal(){document.getElementById('modalOverlay').classList.add('open');}
+function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
+document.getElementById('loginUser').focus();
 </script>
 </body>
 </html>
