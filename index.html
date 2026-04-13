@@ -1193,19 +1193,180 @@ function handleFile(input, tipo) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', raw: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+      const rows = parseBiff8(e.target.result);
+      if (rows.length === 0) {
+        showToast('No se encontraron datos en el archivo.', 'warn');
+        return;
+      }
       parseSkylabRows(rows, tipo, file.name);
     } catch(err) {
       console.error(err);
-      showToast('Error al leer el archivo. Verificá que sea el reporte de Skylab.', 'warn');
+      showToast('Error al leer el archivo: ' + err.message, 'warn');
     }
   };
   reader.readAsArrayBuffer(file);
   input.value = '';
 }
+
+// Parser OLE2/BIFF8 nativo - lee el XLS directamente sin depender de SheetJS
+function parseBiff8(buffer) {
+  const data = new Uint8Array(buffer);
+  const dv = new DataView(buffer);
+  if (data[0] !== 0xD0 || data[1] !== 0xCF) throw new Error('No es XLS válido');
+
+  const sectorSize = 1 << dv.getUint16(30, true);
+  const numFatSectors = dv.getUint32(44, true);
+
+  // Leer FAT
+  const fat = [];
+  for (let i = 0; i < numFatSectors; i++) {
+    const fatSector = dv.getUint32(76 + i * 4, true);
+    const fatOffset = (fatSector + 1) * sectorSize;
+    for (let j = 0; j < sectorSize / 4; j++) {
+      fat.push(dv.getInt32(fatOffset + j * 4, true));
+    }
+  }
+
+  // Encontrar stream WORKBOOK en directorio OLE2
+  const dirOffset = (dv.getUint32(48, true) + 1) * sectorSize;
+  let wbStart = -1;
+  for (let i = 0; i < 20; i++) {
+    const eo = dirOffset + i * 128;
+    if (eo + 128 > data.length) break;
+    const nameLen = dv.getUint16(eo + 64, true);
+    if (nameLen > 0 && nameLen <= 64) {
+      let name = '';
+      for (let j = 0; j < nameLen - 2; j += 2) name += String.fromCharCode(dv.getUint16(eo + j, true));
+      if (name.toUpperCase() === 'WORKBOOK' || name.toUpperCase() === 'BOOK') {
+        wbStart = dv.getUint32(eo + 116, true);
+        break;
+      }
+    }
+  }
+  if (wbStart < 0) throw new Error('Stream WORKBOOK no encontrado');
+
+  // Leer stream WORKBOOK completo
+  const chunks = [];
+  let cur = wbStart;
+  const seen = new Set();
+  while (cur >= 0 && cur !== -2 && cur !== -1 && !seen.has(cur) && seen.size < 5000) {
+    seen.add(cur);
+    const off = (cur + 1) * sectorSize;
+    chunks.push(data.slice(off, off + sectorSize));
+    cur = fat[cur];
+  }
+  const wbArr = new Uint8Array(chunks.reduce((s,c) => s+c.length, 0));
+  let p = 0; for (const c of chunks) { wbArr.set(c, p); p += c.length; }
+  const wb = wbArr;
+  const wdv = new DataView(wb.buffer);
+
+  // Parsear SST con manejo correcto de CONTINUE boundaries
+  const strs = [];
+  let sstP = -1;
+  for (let i = 0; i < wb.length - 4; i += 4 + Math.max(wdv.getUint16(i+2,true),1)) {
+    if (wdv.getUint16(i,true) === 0x00FC) { sstP = i; break; }
+  }
+  if (sstP >= 0) {
+    const sstLen = wdv.getUint16(sstP+2,true);
+    const uniq = wdv.getUint32(sstP+8,true);
+
+    // Recolectar segmentos SST + CONTINUE con sus límites
+    const segments = [wb.slice(sstP+4, sstP+4+sstLen)];
+    const segBounds = [segments[0].length];
+    let cp = sstP+4+sstLen;
+    while (cp < wb.length-4 && wdv.getUint16(cp,true) === 0x003C) {
+      const cl = wdv.getUint16(cp+2,true);
+      const seg = wb.slice(cp+4, cp+4+cl);
+      segBounds.push(segBounds[segBounds.length-1] + seg.length);
+      segments.push(seg);
+      cp += 4+cl;
+    }
+
+    // Concatenar todos los segmentos
+    const totalLen = segments.reduce((s,c) => s+c.length, 0);
+    const sd = new Uint8Array(totalLen);
+    let off = 0; for (const s of segments) { sd.set(s, off); off += s.length; }
+    const sdv = new DataView(sd.buffer);
+
+    // Parsear strings con manejo de límites de CONTINUE
+    // En BIFF8, cuando un string cruza un límite de CONTINUE, hay un byte grBit
+    // al inicio del CONTINUE que puede cambiar el modo unicode/ansi del resto del string
+    let sp = 8; // skip totalStrings + uniqueStrings headers
+    while (sp < sd.length && strs.length < uniq) {
+      try {
+        if (sp + 3 > sd.length) break;
+        const nc = sdv.getUint16(sp,true);
+        const fl = sd[sp+2];
+        let curUni = fl&1;
+        const rich = (fl>>3)&1, phon = (fl>>2)&1;
+        sp += 3;
+        let rc=0, pl=0;
+        if (rich) { rc=sdv.getUint16(sp,true); sp+=2; }
+        if (phon) { pl=sdv.getUint32(sp,true); sp+=4; }
+
+        // Leer caracteres, chequeando límites de segmento
+        let s='', charsRead=0;
+        while (charsRead < nc) {
+          // Chequear si estamos en un límite de segmento (grBit de CONTINUE)
+          for (const bound of segBounds) {
+            if (sp === bound && charsRead < nc) {
+              curUni = sd[sp] & 1;
+              sp++;
+              break;
+            }
+          }
+          if (sp >= sd.length) break;
+          if (curUni) {
+            if (sp+2 > sd.length) break;
+            s += String.fromCharCode(sdv.getUint16(sp,true));
+            sp += 2;
+          } else {
+            s += String.fromCharCode(sd[sp]);
+            sp++;
+          }
+          charsRead++;
+        }
+        sp += rc*4 + pl;
+        strs.push(s.trim());
+      } catch(e) { break; }
+    }
+  }
+
+  // Parsear celdas
+  const rowMap = new Map();
+  const RK = rk => (rk&2) ? (rk>>2)/100 : (()=>{const b=new Uint8Array(8);new DataView(b.buffer).setUint32(4,rk&0xFFFFFFFC,true);return new DataView(b.buffer).getFloat64(0,true);})();
+  for (let i = 0; i < wb.length-4; ) {
+    const rt = wdv.getUint16(i,true);
+    const rl = wdv.getUint16(i+2,true);
+    try {
+      if (rt===0x00FD && rl>=10) {
+        const r=wdv.getUint16(i+4,true), c=wdv.getUint16(i+6,true), idx=wdv.getUint32(i+10,true);
+        if (idx<strs.length) { if(!rowMap.has(r))rowMap.set(r,{}); rowMap.get(r)[c]=strs[idx]; }
+      } else if (rt===0x0203 && rl>=14) {
+        const r=wdv.getUint16(i+4,true), c=wdv.getUint16(i+6,true);
+        if(!rowMap.has(r))rowMap.set(r,{}); rowMap.get(r)[c]=wdv.getFloat64(i+10,true);
+      } else if (rt===0x027E && rl>=6) {
+        const r=wdv.getUint16(i+4,true), c=wdv.getUint16(i+6,true);
+        if(!rowMap.has(r))rowMap.set(r,{}); rowMap.get(r)[c]=RK(wdv.getUint32(i+10,true));
+      } else if (rt===0x00BE && rl>=6) {
+        const r=wdv.getUint16(i+4,true), fc=wdv.getUint16(i+6,true), n=(rl-6)/6;
+        if(!rowMap.has(r))rowMap.set(r,{});
+        for(let k=0;k<n;k++) rowMap.get(r)[fc+k]=RK(wdv.getUint32(i+8+k*6+2,true));
+      }
+    } catch(e) {}
+    i += 4 + Math.max(rl,1);
+  }
+
+  // Convertir a array de filas secuencial
+  return Array.from(rowMap.keys()).sort((a,b)=>a-b).map(rn => {
+    const obj = rowMap.get(rn);
+    const maxC = Math.max(...Object.keys(obj).map(Number));
+    const arr = new Array(maxC+1).fill(null);
+    Object.entries(obj).forEach(([c,v]) => arr[Number(c)]=v);
+    return arr;
+  });
+}
+
 
 // Convierte número serial de Excel a fecha JS
 function excelDateToJS(serial) {
@@ -1295,9 +1456,17 @@ function parseSkylabRows(rows, tipo, filename) {
     }
 
     // ── Línea de dirección/teléfono ──
-    if (esperandoDir && c0.replace(/\s/g,'').toLowerCase().startsWith('direccion')) {
-      currentDir = c(3);
-      currentPhone = c(19);
+    // C0 o C1 puede tener "Direccion:" según el formato del archivo
+    const dirCell = c0.replace(/\s/g,'').toLowerCase();
+    const c1str = row[1] !== undefined && row[1] !== null ? String(row[1]).trim() : '';
+    const isDirRow = esperandoDir && (
+      dirCell.startsWith('direccion') || 
+      c1str.replace(/\s/g,'').toLowerCase().startsWith('direccion')
+    );
+    if (isDirRow) {
+      // Formato A: dir en C3, tel en C19 | Formato B: dir en C4, tel en C20
+      currentDir = c(3) || c(4);
+      currentPhone = c(19) || c(20);
       if (clientsMap[currentName]) {
         clientsMap[currentName].direccion = currentDir;
         clientsMap[currentName].telefono_raw = currentPhone;
@@ -1308,29 +1477,40 @@ function parseSkylabRows(rows, tipo, filename) {
     }
 
     // ── Línea de movimiento ──
+    // Detectar columnas automáticamente: algunos archivos usan C0 para fecha, otros C1
     if (currentName && clientsMap[currentName]) {
-      const fechaNum = n(0);
-      const tipo2 = c(2);
       const tiposValidos = ['factura','n/debito','n/credito','recibo','adelanto','n/débito','n/crédito'];
-      const esTipo = tiposValidos.some(t => tipo2.toLowerCase().includes(t));
+      
+      // Detectar columna de fecha (C0 o C1) y tipo (C2 o C3)
+      let fechaNum = null, tipo2 = '', vtoCol = 12, saldoCol = 19, nroCol = 10, impCol = 14;
+      
+      if (n(0) && n(0) > 40000 && n(0) < 50000 && tiposValidos.some(t => c(2).toLowerCase().includes(t))) {
+        // Formato A: fecha en C0, tipo en C2, vto en C12, saldo en C19
+        fechaNum = n(0); tipo2 = c(2); vtoCol=12; saldoCol=19; nroCol=10; impCol=14;
+      } else if (n(1) && n(1) > 40000 && n(1) < 50000 && tiposValidos.some(t => c(3).toLowerCase().includes(t))) {
+        // Formato B: fecha en C1, tipo en C3, vto en C13, saldo en C20
+        fechaNum = n(1); tipo2 = c(3); vtoCol=13; saldoCol=20; nroCol=11; impCol=15;
+      }
+      
+      const esTipo = tipo2 && tiposValidos.some(t => tipo2.toLowerCase().includes(t));
 
-      if (fechaNum && fechaNum > 40000 && fechaNum < 50000 && esTipo) {
+      if (fechaNum && esTipo) {
         const fechaEmision = excelDateToJS(fechaNum);
-        const vtoNum = n(12);
+        const vtoNum = n(vtoCol);
         const fechaVto = vtoNum ? excelDateToJS(vtoNum) : fechaEmision;
-        const numero = c(10);
-        const saldo = n(19);
+        const numero = c(nroCol);
+        const saldo = n(saldoCol);
 
         if (saldo !== null && saldo > 0) {
           const fechaRef = fechaEmision || fechaVto;
           if (!fechaRef || fechaRef >= FECHA_CORTE) {
             clientsMap[currentName].movimientos.push({
               tipo: tipo2.toUpperCase(),
-              tipoComp: c(8),
-              nro: c(10),
+              tipoComp: c(vtoCol-4),
+              nro: numero,
               fechaEmision,
               fechaVto,
-              importe: n(14) || saldo,
+              importe: n(impCol) || saldo,
               saldo
             });
             clientsMap[currentName].saldoTotal += saldo;
