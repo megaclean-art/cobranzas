@@ -1194,11 +1194,10 @@ function handleFile(input, tipo) {
   reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', raw: true });
+      // dense:true hace que SheetJS guarde las celdas en arrays en vez de objetos
+      // lo que resuelve el problema con archivos XLS que tienen filas de número alto
+      const wb = XLSX.read(data, { type: 'array', raw: true, dense: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-
-      // Leer celdas directamente para evitar problemas con sheet_to_json
-      // en archivos XLS con filas de número alto
       const rows = wsToRows(ws);
       parseSkylabRows(rows, tipo, file.name);
     } catch(err) {
@@ -1210,29 +1209,32 @@ function handleFile(input, tipo) {
   input.value = '';
 }
 
-// Convierte el worksheet a array de filas leyendo celda por celda
-// Esto es más robusto que sheet_to_json para archivos XLS con filas de número alto
+// Convierte el worksheet a array de filas
+// Maneja tanto formato normal como dense (para archivos XLS con filas de número alto)
 function wsToRows(ws) {
-  const ref = ws['!ref'];
-  if (!ref) return [];
-  const range = XLSX.utils.decode_range(ref);
-  const rows = [];
-  for (let R = range.s.r; R <= range.e.r; R++) {
-    const row = [];
-    let hasData = false;
-    for (let C = range.s.c; C <= range.e.c; C++) {
-      const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
-      const cell = ws[cellAddr];
-      if (cell !== undefined) {
-        row[C] = cell.v !== undefined ? cell.v : null;
-        hasData = true;
-      } else {
-        row[C] = null;
+  // dense:true guarda datos como ws['!data'][row][col]
+  if (ws['!data']) {
+    const rows = [];
+    for (let R = 0; R < ws['!data'].length; R++) {
+      const denseRow = ws['!data'][R];
+      if (!denseRow) { rows.push(null); continue; }
+      const row = [];
+      let hasData = false;
+      for (let C = 0; C < denseRow.length; C++) {
+        const cell = denseRow[C];
+        if (cell && cell.v !== undefined) {
+          row[C] = cell.v;
+          hasData = true;
+        } else {
+          row[C] = null;
+        }
       }
+      rows.push(hasData ? row : null);
     }
-    rows.push(hasData ? row : null);
+    return rows;
   }
-  return rows;
+  // Formato normal: usar sheet_to_json
+  return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
 }
 
 // Convierte número serial de Excel a fecha JS
