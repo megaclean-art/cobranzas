@@ -643,7 +643,7 @@
         <div class="import-status-wrap">
           <span class="import-status" id="import-status-fact">Sin datos</span>
         </div>
-        <input type="file" id="file-input-fact" accept=".xls,.xlsx" onchange="handleFile(this,'facturado')">
+        <input type="file" id="file-input-fact" accept=".xls,.xlsx,.csv,.txt" onchange="handleFile(this,'facturado')">
         <button class="btn-import" onclick="document.getElementById('file-input-fact').click()">Cargar XLS</button>
       </div>
 
@@ -656,7 +656,7 @@
         <div class="import-status-wrap">
           <span class="import-status" id="import-status-sf">Sin datos</span>
         </div>
-        <input type="file" id="file-input-sf" accept=".xls,.xlsx" onchange="handleFile(this,'sinfactura')">
+        <input type="file" id="file-input-sf" accept=".xls,.xlsx,.csv,.txt" onchange="handleFile(this,'sinfactura')">
         <button class="btn-import secondary" onclick="document.getElementById('file-input-sf').click()">Cargar XLS</button>
       </div>
 
@@ -1190,22 +1190,193 @@ function doLogout() {
 function handleFile(input, tipo) {
   const file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const rows = parseBiff8(e.target.result);
-      if (rows.length === 0) {
-        showToast('No se encontraron datos en el archivo.', 'warn');
-        return;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'csv' || ext === 'txt') {
+    // --- Rama CSV / TXT ---
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        parseCsvSkylab(e.target.result, tipo);
+      } catch(err) {
+        console.error(err);
+        showToast('Error al leer el CSV: ' + err.message, 'warn');
       }
-      parseSkylabRows(rows, tipo, file.name);
-    } catch(err) {
-      console.error(err);
-      showToast('Error al leer el archivo: ' + err.message, 'warn');
-    }
-  };
-  reader.readAsArrayBuffer(file);
+    };
+    // Crystal Reports suele exportar con encoding Windows-1252
+    reader.readAsText(file, 'windows-1252');
+  } else {
+    // --- Rama XLS (original) ---
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const rows = parseBiff8(e.target.result);
+        if (rows.length === 0) {
+          showToast('No se encontraron datos en el archivo.', 'warn');
+          return;
+        }
+        parseSkylabRows(rows, tipo, file.name);
+      } catch(err) {
+        console.error(err);
+        showToast('Error al leer el archivo: ' + err.message, 'warn');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
   input.value = '';
+}
+
+// ─── Parser CSV de Skylab (formato desnormalizado) ──────────────────────────
+// Cada fila del CSV tiene TODA la info: empresa, cliente, dirección, tel,
+// código y UN movimiento. Columnas:
+//  0  = empresa (ignorar)
+//  1  = título reporte (ignorar)
+//  2  = fecha reporte (ignorar)
+//  3  = hora (ignorar)
+//  4  = página (ignorar)
+//  5  = " Direccion:" (literal, ignorar)
+//  6  = nombre cliente
+//  7  = dirección
+//  8  = "Tel.:" (literal, ignorar)
+//  9  = teléfono
+//  10 = "Codigo :" (literal, ignorar)
+//  11 = código cliente
+//  12..19 = headers de tabla (ignorar)
+//  20 = fecha emisión (dd/mm/yyyy)
+//  21 = tipo (Factura, Adelanto, N/Credito, N/Debito, Recibo)
+//  22 = letra (A, B, X)
+//  23 = punto de venta
+//  24 = número comprobante
+//  25 = fecha vencimiento (dd/mm/yyyy)
+//  26 = importe original
+//  27 = saldo adeudado
+function parseCsvSkylab(text, tipo) {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+
+  // Separar celdas respetando comillas dobles (CSV estándar)
+  function splitLine(line) {
+    const cells = [];
+    let cur = '';
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === ',' && !inQ) {
+        cells.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    cells.push(cur.trim());
+    return cells;
+  }
+
+  // Convertir importe "222.793,07" → número
+  function parseImporte(s) {
+    if (!s) return 0;
+    const clean = s.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '');
+    return parseFloat(clean) || 0;
+  }
+
+  const clientsMap = {};
+  const tiposValidos = ['factura','n/debito','n/credito','recibo','adelanto','n/débito','n/crédito'];
+  const FECHA_CORTE = new Date(2025, 0, 1);
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const c = splitLine(line);
+    if (c.length < 28) continue;
+
+    // Verificar que es una fila de movimiento válida (col 21 = tipo comprobante)
+    const tipoComp = (c[21] || '').trim().toLowerCase();
+    if (!tiposValidos.some(t => tipoComp.includes(t))) continue;
+
+    const nombre = (c[6] || '').trim().toUpperCase();
+    if (!nombre || nombre.length < 2) continue;
+
+    // Crear cliente si no existe
+    if (!clientsMap[nombre]) {
+      clientsMap[nombre] = {
+        nombre,
+        codigo: (c[11] || '').trim(),
+        tipo,
+        telefono: limpiarTelefono((c[9] || '').trim()),
+        telefono_raw: (c[9] || '').trim(),
+        direccion: (c[7] || '').trim(),
+        movimientos: [],
+        saldoTotal: 0,
+        admin: buscarAdmin(nombre)
+      };
+    }
+
+    // Parsear movimiento
+    const fechaEmision = parseDateStr(c[20]);
+    const fechaVto     = parseDateStr(c[25]) || fechaEmision;
+    const saldo        = parseImporte(c[27]);
+    const importe      = parseImporte(c[26]);
+    const numero       = (c[24] || '').trim();
+    const letra        = (c[22] || '').trim();
+    const ptovta       = (c[23] || '').trim();
+
+    if (saldo === 0) continue;
+
+    // Filtro de fecha (saldo > 0 se incluye siempre; para negativos, idem)
+    const fechaRef = fechaEmision || fechaVto;
+    // Solo filtrar fechas muy viejas si el saldo es positivo
+    if (saldo > 0 && fechaRef && fechaRef < FECHA_CORTE) continue;
+
+    clientsMap[nombre].movimientos.push({
+      tipo: (c[21] || '').trim().toUpperCase(),
+      tipoComp: letra,
+      nro: numero,
+      letra,
+      ptovta,
+      fechaEmision,
+      fechaVto,
+      importe,
+      saldo
+    });
+    clientsMap[nombre].saldoTotal += saldo;
+  }
+
+  // Filtrar con saldo neto > 0.5
+  const nuevos = Object.values(clientsMap).filter(c => c.saldoTotal > 0.5);
+
+  // Integrar en allClients (igual lógica que parseSkylabRows)
+  allClients = allClients.filter(c => c.tipo !== tipo && c.tipo !== 'ambos');
+  nuevos.forEach(nc => {
+    const existente = allClients.find(c => c.nombre === nc.nombre);
+    if (existente) {
+      existente.tipo = 'ambos';
+      nc.movimientos.forEach(m => {
+        if (!existente.movimientos.find(em => em.nro === m.nro && em.tipo === m.tipo)) {
+          existente.movimientos.push(m);
+          existente.saldoTotal += m.saldo;
+        }
+      });
+    } else {
+      allClients.push(nc);
+    }
+  });
+
+  allClients.forEach(c => {
+    c.estado = calcularEstado(c);
+    c.diasVencido = calcularDiasVencido(c);
+  });
+
+  updateStats();
+  renderTable();
+  renderAgenda();
+  saveToStorage();
+
+  const fecha = new Date().toLocaleDateString('es-AR');
+  const statusEl = document.getElementById(`import-status-${tipo === 'facturado' ? 'fact' : 'sf'}`);
+  statusEl.textContent = `${nuevos.length} clientes · ${fecha}`;
+  statusEl.classList.add('loaded');
+  showToast(`✓ ${nuevos.length} clientes importados (${tipo === 'facturado' ? 'facturado' : 'sin factura'})`, 'ok');
 }
 
 // Parser OLE2/BIFF8 nativo - lee el XLS directamente sin depender de SheetJS
