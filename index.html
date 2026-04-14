@@ -1251,7 +1251,9 @@ function handleFile(input, tipo) {
 //  26 = importe original
 //  27 = saldo adeudado
 function parseCsvSkylab(text, tipo) {
+  console.log('[CSV] Iniciando parseo, tipo:', tipo, 'longitud texto:', text.length);
   const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  console.log('[CSV] Total líneas:', lines.length);
 
   // Separar celdas respetando comillas dobles (CSV estándar)
   function splitLine(line) {
@@ -1313,13 +1315,13 @@ function parseCsvSkylab(text, tipo) {
     }
 
     // Parsear movimiento
-    const fechaEmision = parseDateStr(c[20]);
-    const fechaVto     = parseDateStr(c[25]) || fechaEmision;
+    const fechaEmision = parseDateStr((c[20]||'').replace(/"/g,'').trim());
+    const fechaVto     = parseDateStr((c[25]||'').replace(/"/g,'').trim()) || fechaEmision;
     const saldo        = parseImporte(c[27]);
     const importe      = parseImporte(c[26]);
-    const numero       = (c[24] || '').trim();
-    const letra        = (c[22] || '').trim();
-    const ptovta       = (c[23] || '').trim();
+    const numero       = (c[24] || '').replace(/"/g,'').trim();
+    const letra        = (c[22] || '').replace(/"/g,'').trim();
+    const ptovta       = (c[23] || '').replace(/"/g,'').trim();
 
     if (saldo === 0) continue;
 
@@ -1344,6 +1346,7 @@ function parseCsvSkylab(text, tipo) {
 
   // Filtrar con saldo neto > 0.5
   const nuevos = Object.values(clientsMap).filter(c => c.saldoTotal > 0.5);
+  console.log('[CSV] Clientes en mapa:', Object.keys(clientsMap).length, '| Con saldo > 0:', nuevos.length);
 
   // Integrar en allClients (igual lógica que parseSkylabRows)
   allClients = allClients.filter(c => c.tipo !== tipo && c.tipo !== 'ambos');
