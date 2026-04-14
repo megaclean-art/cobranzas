@@ -1315,8 +1315,8 @@ function parseCsvSkylab(text, tipo) {
     }
 
     // Parsear movimiento
-    const fechaEmision = parseDateStr((c[20]||'').replace(/"/g,'').trim());
-    const fechaVto     = parseDateStr((c[25]||'').replace(/"/g,'').trim()) || fechaEmision;
+    const fechaEmision = parseDate((c[20]||'').replace(/"/g,'').trim());
+    const fechaVto     = parseDate((c[25]||'').replace(/"/g,'').trim()) || fechaEmision;
     const saldo        = parseImporte(c[27]);
     const importe      = parseImporte(c[26]);
     const numero       = (c[24] || '').replace(/"/g,'').trim();
