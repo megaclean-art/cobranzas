@@ -1797,14 +1797,14 @@ function limpiarTelefono(tel) {
 // Usa los días de vencimiento reales del movimiento más antiguo vencido
 // ============================================================
 function calcularFechaVtoEfectiva(m, nombreCliente) {
-  // Si el cliente tiene condición de días manual, usar fechaEmision + N días
-  const dias = condicionDias[nombreCliente];
-  if (dias && m.fechaEmision) {
+  // Si el cliente tiene condición de días manual (o el default 30), usar fechaEmision + N días
+  const dias = condicionDias[nombreCliente] !== undefined ? condicionDias[nombreCliente] : 30;
+  if (m.fechaEmision) {
     const vto = new Date(m.fechaEmision);
     vto.setDate(vto.getDate() + dias);
     return vto;
   }
-  // Si no, usar la fecha de vencimiento de Skylab
+  // Sin fecha de emisión: usar la fecha de vencimiento de Skylab
   return m.fechaVto ? new Date(m.fechaVto) : null;
 }
 
@@ -2071,7 +2071,7 @@ function fillTabInfo(c) {
       <div class="detail-row">
         <span class="detail-label">Email</span>
         <span class="detail-value" style="display:flex;align-items:center;gap:8px">
-          <span id="email-display-${c.nombre.replace(/[^a-zA-Z0-9]/g,'_')}">${'${emailsClientes[c.nombre] || ""}'}</span>
+          <span id="email-display-${c.nombre.replace(/[^a-zA-Z0-9]/g,'_')}">${emailsClientes[c.nombre] || '<em style=\"color:var(--text3)\">Sin email</em>'}</span>
           <button onclick="editarEmail('${esc(c.nombre)}')" style="font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:4px;background:transparent;cursor:pointer;font-family:inherit;color:var(--text2)">✏️ Editar</button>
         </span>
       </div>
@@ -2079,7 +2079,7 @@ function fillTabInfo(c) {
       <div class="detail-row">
         <span class="detail-label">⏱️ Condición</span>
         <span class="detail-value" style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:600;color:${condicionDias[c.nombre] ? 'var(--blue)' : 'var(--text3)'}">${condicionDias[c.nombre] ? condicionDias[c.nombre] + ' días desde emisión' : 'Usar vto. de Skylab'}</span>
+          <span style="font-weight:600;color:${condicionDias[c.nombre] ? 'var(--blue)' : 'var(--text3)'}">${condicionDias[c.nombre] !== undefined ? condicionDias[c.nombre] + ' días desde emisión' : '30 días (default)'}</span>
           <button onclick="editarCondicion('${esc(c.nombre)}')" style="font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:4px;background:transparent;cursor:pointer;font-family:inherit;color:var(--text2)">✏️ Editar</button>
         </span>
       </div>
@@ -2413,14 +2413,14 @@ function editarCondicion(nombre) {
   const input = prompt(
     'Condición de pago para ' + nombre + '\n' +
     'Ingresá la cantidad de días desde la fecha de factura (ej: 15, 30, 60)\n' +
-    'Dejá vacío para usar la fecha de vencimiento de Skylab:',
+    'Dejá vacío para usar el default de 30 días:',
     actual
   );
   if (input === null) return; // canceló
   const dias = parseInt(input.trim());
   if (input.trim() === '') {
     delete condicionDias[nombre];
-    showToast('Condición eliminada — usará vto. de Skylab', 'ok');
+    showToast('Condición eliminada — usará 30 días por defecto', 'ok');
   } else if (isNaN(dias) || dias < 1 || dias > 365) {
     showToast('Ingresá un número entre 1 y 365', 'warn'); return;
   } else {
