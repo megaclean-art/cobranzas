@@ -389,6 +389,16 @@
   .historial-item.tipo-llamada { border-left-color: var(--blue); }
   .historial-item.tipo-whatsapp { border-left-color: #25D366; }
   .historial-item.tipo-email { border-left-color: #0078d4; }
+
+  /* Fila gestionada en tabla */
+  tr.fila-gestionada { background: #f0fdf4 !important; }
+  tr.fila-gestionada:hover { background: #dcfce7 !important; }
+  .gestión-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600; padding: 2px 7px;
+    border-radius: 10px; background: #dcfce7; color: #166534;
+    border: 1px solid #bbf7d0; margin-left: 4px; vertical-align: middle;
+  }
   .historial-item.tipo-visita { border-left-color: var(--orange); }
   .historial-item.tipo-promesa { border-left-color: var(--yellow); }
   .historial-item.tipo-pago { border-left-color: var(--green); }
@@ -1956,6 +1966,8 @@ function renderTable() {
 
     // Última gestión / promesa
     const gests = gestiones[c.nombre] || [];
+    const tiposGestion = ['WhatsApp','Llamada','Email','Visita'];
+    const fueGestionado = gests.some(g => tiposGestion.includes(g.tipo));
     let gestionTag = '';
     if (gests.length > 0) {
       const ultima = gests[gests.length - 1];
@@ -1985,9 +1997,9 @@ function renderTable() {
       ? `<button class="btn-judicial-on" onclick="toggleJudicial('${esc(c.nombre)}')">⚖️ Quitar</button>`
       : `<button class="btn-judicial-off" onclick="toggleJudicial('${esc(c.nombre)}')">⚖️ Judicial</button>`;
 
-    return `<tr>
+    return `<tr class="${fueGestionado ? 'fila-gestionada' : ''}">
       <td>
-        <div>${tipoTag}</div>
+        <div>${tipoTag}${fueGestionado ? '<span class="gestión-badge">✓ Gestionado</span>' : ''}</div>
         <div class="client-name">${c.nombre}</div>
         <div class="client-code">#${c.codigo}</div>
         ${adminTag}
